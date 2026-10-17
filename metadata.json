@@ -1,0 +1,6 @@
+{
+  "name": "Skelvre",
+  "description": "Non-custodial, multi-chain subscription and agentic payment platform with zero-modal architecture, WebCrypto enclaves, and MCP execution gateways.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
