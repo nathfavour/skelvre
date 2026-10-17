@@ -79,7 +79,7 @@ export function OverviewView() {
           <div className="pt-2 flex flex-wrap items-center gap-3">
             <button
               onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
-              className="px-4 py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30 flex items-center gap-2"
+              className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
             >
               <Repeat className="w-4 h-4" />
               <span>Authorize New Subscription</span>
@@ -87,7 +87,7 @@ export function OverviewView() {
 
             <button
               onClick={() => openRightSidebar('create_agent_session', null, 'Provision MCP Agent Session')}
-              className="px-4 py-2.5 text-xs font-semibold text-zinc-200 bg-black border border-white/15 rounded-lg hover:border-indigo-500/50 hover:bg-zinc-950 transition-colors flex items-center gap-2"
+              className="px-4 py-2.5 text-xs font-semibold text-zinc-200 bg-black border border-white/15 rounded-lg hover:border-violet-500/50 hover:bg-zinc-950 transition-colors flex items-center gap-2"
             >
               <Bot className="w-4 h-4" />
               <span>Deploy MCP Session</span>
@@ -122,7 +122,7 @@ export function OverviewView() {
         <div className="p-5 rounded-xl bg-black border border-white/15 space-y-2">
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
             <span>Universal Balance</span>
-            <WalletIcon className="w-4 h-4 text-indigo-400" />
+            <WalletIcon className="w-4 h-4 text-violet-400" />
           </div>
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             ${totalBalanceUsd.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -150,7 +150,7 @@ export function OverviewView() {
         <div className="p-5 rounded-xl bg-black border border-white/15 space-y-2">
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
             <span>Agent Sessions</span>
-            <Bot className="w-4 h-4 text-indigo-400" />
+            <Bot className="w-4 h-4 text-violet-400" />
           </div>
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             {agentSessions.length} Active
@@ -164,7 +164,7 @@ export function OverviewView() {
         <div className="p-5 rounded-xl bg-black border border-white/15 space-y-2">
           <div className="flex items-center justify-between text-xs font-mono text-zinc-400">
             <span>Cumulative Settled</span>
-            <Activity className="w-4 h-4 text-indigo-400" />
+            <Activity className="w-4 h-4 text-violet-400" />
           </div>
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             ${totalSettledUsd.toFixed(2)}
@@ -188,7 +188,7 @@ export function OverviewView() {
             </div>
             <button
               onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-mono flex items-center gap-1"
+              className="text-xs text-violet-400 hover:text-violet-300 font-mono flex items-center gap-1"
             >
               <span>Derive Wallet</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -202,7 +202,7 @@ export function OverviewView() {
                 <div
                   key={w.id}
                   onClick={() => openRightSidebar('wallet_details', w, 'Wallet Parameters')}
-                  className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-indigo-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
+                  className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-base">{chain?.icon || '⚡'}</span>
@@ -210,7 +210,7 @@ export function OverviewView() {
                       <div className="font-semibold text-white flex items-center gap-2">
                         <span>{w.label}</span>
                         {w.isPrimary && (
-                          <span className="text-[10px] text-indigo-400 font-mono bg-indigo-950/60 px-1.5 py-0.2 rounded border border-indigo-500/40">
+                          <span className="text-[10px] text-violet-400 font-mono bg-violet-950/60 px-1.5 py-0.2 rounded border border-violet-500/40">
                             Primary
                           </span>
                         )}
@@ -242,7 +242,7 @@ export function OverviewView() {
             </div>
             <Link
               href="/subscriptions"
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-mono flex items-center gap-1"
+              className="text-xs text-violet-400 hover:text-violet-300 font-mono flex items-center gap-1"
             >
               <span>View All ({grants.length})</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -254,7 +254,7 @@ export function OverviewView() {
               <div
                 key={g.id}
                 onClick={() => openRightSidebar('grant_details', g, 'Allowance Grant Proof')}
-                className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-indigo-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
+                className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
               >
                 <div>
                   <div className="font-semibold text-white">{g.merchantName}</div>
@@ -292,7 +292,7 @@ export function OverviewView() {
             <button
               onClick={() => setFilterLedger('all')}
               className={`px-3 py-1 rounded transition-colors ${
-                filterLedger === 'all' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+                filterLedger === 'all' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
               }`}
             >
               All Events ({ledger.length})
@@ -300,7 +300,7 @@ export function OverviewView() {
             <button
               onClick={() => setFilterLedger('success')}
               className={`px-3 py-1 rounded transition-colors ${
-                filterLedger === 'success' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+                filterLedger === 'success' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
               }`}
             >
               Success
@@ -308,7 +308,7 @@ export function OverviewView() {
             <button
               onClick={() => setFilterLedger('blocked')}
               className={`px-3 py-1 rounded transition-colors ${
-                filterLedger === 'blocked' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+                filterLedger === 'blocked' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
               }`}
             >
               Guardrail Blocked
@@ -363,7 +363,7 @@ export function OverviewView() {
                     </td>
                     <td className="py-3 text-right">
                       {entry.txHash ? (
-                        <span className="text-indigo-400 hover:text-indigo-300">
+                        <span className="text-violet-400 hover:text-violet-300">
                           {entry.txHash.slice(0, 6)}...{entry.txHash.slice(-4)}
                         </span>
                       ) : (
@@ -382,7 +382,7 @@ export function OverviewView() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         <div className="p-6 rounded-xl bg-black border border-white/15 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
-            <div className="text-xs font-mono text-indigo-400 uppercase tracking-wider">
+            <div className="text-xs font-mono text-violet-400 uppercase tracking-wider">
               Zero-Custody Architecture
             </div>
             <h3 className="text-lg font-bold text-white">
@@ -406,7 +406,7 @@ export function OverviewView() {
 
         <div className="p-6 rounded-xl bg-black border border-white/15 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
-            <div className="text-xs font-mono text-indigo-400 uppercase tracking-wider">
+            <div className="text-xs font-mono text-violet-400 uppercase tracking-wider">
               Agentic MCP Protocol
             </div>
             <h3 className="text-lg font-bold text-white">
@@ -419,12 +419,12 @@ export function OverviewView() {
 
           <div className="p-4 rounded-lg bg-zinc-950 border border-white/10 font-mono text-xs text-zinc-300 space-y-2">
             <div className="text-zinc-500">{'// MCP Client Configuration snippet'}</div>
-            <div className="text-indigo-400">
+            <div className="text-violet-400">
               {`{ "mcpServers": { "skelvre": { "command": "npx", "args": ["-y", "@skelvre/mcp-gateway"] } } }`}
             </div>
             <div className="pt-2 flex items-center justify-between text-[11px] text-zinc-400">
               <span>Status: Gateway Ready</span>
-              <Link href="/agents" className="text-indigo-400 hover:text-indigo-300">
+              <Link href="/agents" className="text-violet-400 hover:text-violet-300">
                 Launch Agent Canvas →
               </Link>
             </div>

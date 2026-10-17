@@ -4,8 +4,8 @@
   :root {
     --shell: #161412;
     --well: #000000;
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
+    --accent: #8b5cf6;
+    --accent-hover: #7c3aed;
   }
 
   body {
@@ -30,5 +30,5 @@
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5);
+  background: rgba(139, 92, 246, 0.5);
 }

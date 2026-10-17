@@ -60,13 +60,13 @@ export function LeftSidebar() {
               <div className="flex items-center gap-2.5">
                 <Icon
                   className={`w-4 h-4 ${
-                    isActive ? 'text-indigo-400' : 'text-zinc-500'
+                    isActive ? 'text-violet-400' : 'text-zinc-500'
                   }`}
                 />
                 <span>{item.label}</span>
               </div>
               {isActive && (
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                <div className="w-1.5 h-1.5 rounded-full bg-violet-500" />
               )}
             </Link>
           );
@@ -98,7 +98,7 @@ export function LeftSidebar() {
                 onClick={() => setActiveWalletId(wallet.id)}
                 className={`w-full text-left p-2 rounded border transition-all text-xs ${
                   isSelected
-                    ? 'bg-zinc-950 border-indigo-500/50 text-white'
+                    ? 'bg-zinc-950 border-violet-500/50 text-white'
                     : 'bg-black border-transparent text-zinc-400 hover:text-zinc-300 hover:bg-zinc-950/60'
                 }`}
               >
@@ -106,7 +106,7 @@ export function LeftSidebar() {
                   <span className="font-medium text-white truncate max-w-[120px]">
                     {wallet.label}
                   </span>
-                  <span className="text-[11px] text-indigo-400">
+                  <span className="text-[11px] text-violet-400">
                     {chain?.symbol || 'ETH'}
                   </span>
                 </div>
@@ -125,7 +125,7 @@ export function LeftSidebar() {
         <div className="p-3 rounded-lg bg-black/60 border border-white/10 text-xs font-mono space-y-1.5">
           <div className="flex items-center justify-between text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-indigo-400" />
+              <Shield className="w-3.5 h-3.5 text-violet-400" />
               <span>Key Custody</span>
             </span>
             <span className="text-[10px] text-emerald-400">Client Enclave</span>
@@ -135,7 +135,7 @@ export function LeftSidebar() {
           </p>
           <button
             onClick={() => openRightSidebar('guardrail_settings', null, 'Security Guardrail Parameters')}
-            className="w-full mt-2 flex items-center justify-between text-[11px] text-indigo-400 hover:text-indigo-300 transition-colors pt-1"
+            className="w-full mt-2 flex items-center justify-between text-[11px] text-violet-400 hover:text-violet-300 transition-colors pt-1"
           >
             <span>Adjust Guardrails</span>
             <ChevronRight className="w-3 h-3" />

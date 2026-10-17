@@ -8,7 +8,7 @@ import { MobileNav } from './MobileNav';
 
 export function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#161412] text-zinc-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-[#161412] text-zinc-100 flex flex-col font-sans selection:bg-violet-600 selection:text-white">
       {/* Top Bar (Sticky, 3-zone contract) */}
       <TopBar />
 

@@ -68,16 +68,16 @@ export function WalletsView() {
             className={`px-3 py-2 text-xs font-mono rounded-lg border transition-colors flex items-center gap-2 ${
               isEnclaveLocked
                 ? 'bg-amber-950/60 border-amber-500/40 text-amber-300'
-                : 'bg-zinc-950 border-white/15 text-zinc-300 hover:border-indigo-500'
+                : 'bg-zinc-950 border-white/15 text-zinc-300 hover:border-violet-500'
             }`}
           >
-            {isEnclaveLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5 text-indigo-400" />}
+            {isEnclaveLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5 text-violet-400" />}
             <span>{isEnclaveLocked ? 'Enclave Locked' : 'Enclave Active'}</span>
           </button>
 
           <button
             onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
-            className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30 flex items-center gap-2"
+            className="px-4 py-2 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             <span>Derive New Wallet</span>
@@ -91,7 +91,7 @@ export function WalletsView() {
           <button
             onClick={() => setFilterType('all')}
             className={`px-3 py-1.5 rounded transition-colors ${
-              filterType === 'all' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+              filterType === 'all' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
             }`}
           >
             All Chains ({wallets.length})
@@ -99,7 +99,7 @@ export function WalletsView() {
           <button
             onClick={() => setFilterType('evm')}
             className={`px-3 py-1.5 rounded transition-colors ${
-              filterType === 'evm' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+              filterType === 'evm' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
             }`}
           >
             EVM (Base, ETH, Arb)
@@ -107,7 +107,7 @@ export function WalletsView() {
           <button
             onClick={() => setFilterType('solana')}
             className={`px-3 py-1.5 rounded transition-colors ${
-              filterType === 'solana' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+              filterType === 'solana' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
             }`}
           >
             Solana (SVM)
@@ -130,7 +130,7 @@ export function WalletsView() {
               key={wallet.id}
               className={`p-5 rounded-xl bg-black border transition-all flex flex-col justify-between space-y-4 ${
                 isSelected
-                  ? 'border-indigo-500/60 shadow-lg shadow-indigo-950/20'
+                  ? 'border-violet-500/60 shadow-lg shadow-violet-950/20'
                   : 'border-white/15 hover:border-white/30'
               }`}
             >
@@ -149,7 +149,7 @@ export function WalletsView() {
                     {wallet.label}
                   </h3>
                   {wallet.isPrimary && (
-                    <span className="text-[10px] font-mono text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-500/40">
+                    <span className="text-[10px] font-mono text-violet-400 bg-violet-950/60 px-2 py-0.5 rounded border border-violet-500/40">
                       Primary
                     </span>
                   )}
@@ -184,7 +184,7 @@ export function WalletsView() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-zinc-500">Native Asset</span>
-                  <span className="text-indigo-400">{wallet.nativeBalance}</span>
+                  <span className="text-violet-400">{wallet.nativeBalance}</span>
                 </div>
                 <div className="flex justify-between border-t border-white/5 pt-1.5 text-[11px]">
                   <span className="text-zinc-500">Derivation</span>
@@ -202,7 +202,7 @@ export function WalletsView() {
                     Set as Active
                   </button>
                 ) : (
-                  <div className="flex-1 py-1.5 text-xs font-mono text-center text-indigo-400 bg-indigo-950/40 border border-indigo-500/30 rounded-lg">
+                  <div className="flex-1 py-1.5 text-xs font-mono text-center text-violet-400 bg-violet-950/40 border border-violet-500/30 rounded-lg">
                     Active Target
                   </div>
                 )}

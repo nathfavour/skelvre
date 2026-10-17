@@ -79,7 +79,7 @@ export function RightSidebar() {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-white/15 bg-black">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-indigo-500" />
+          <div className="w-2 h-2 rounded-full bg-violet-500" />
           <h2 className="text-sm font-semibold text-white tracking-tight">
             {rightSidebar.title || 'Context Details'}
           </h2>
@@ -98,8 +98,8 @@ export function RightSidebar() {
         {/* VIEW 1: SIGN REQUEST (ENCLAVE RELAY) */}
         {rightSidebar.type === 'sign_request' && activeSignRequest && (
           <div className="space-y-4">
-            <div className="p-4 rounded-lg bg-black border border-indigo-500/30 space-y-3">
-              <div className="flex items-center gap-2 text-indigo-400 text-xs font-mono uppercase tracking-wider">
+            <div className="p-4 rounded-lg bg-black border border-violet-500/30 space-y-3">
+              <div className="flex items-center gap-2 text-violet-400 text-xs font-mono uppercase tracking-wider">
                 <Fingerprint className="w-4 h-4" />
                 <span>Client-Side Signer Relay</span>
               </div>
@@ -138,7 +138,7 @@ export function RightSidebar() {
               </div>
               <div className="flex justify-between py-1">
                 <span className="text-zinc-400">Network CAIP</span>
-                <span className="text-indigo-400">
+                <span className="text-violet-400">
                   {activeSignRequest.chainCaip}
                 </span>
               </div>
@@ -170,7 +170,7 @@ export function RightSidebar() {
                   }
                 }}
                 disabled={signingPending}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/30 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-lg shadow-violet-600/30 disabled:opacity-50"
               >
                 <Fingerprint className="w-4 h-4" />
                 <span>{signingPending ? 'Enclave Signing...' : 'Authorize & Sign'}</span>
@@ -211,7 +211,7 @@ export function RightSidebar() {
                   setNewWalletChain(val);
                   setNewWalletPath(val.startsWith('solana') ? "m/44'/501'/0'/0'" : "m/44'/60'/0'/0/0");
                 }}
-                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
               >
                 {Object.values(SUPPORTED_CHAINS).map((chain) => (
                   <option key={chain.caip} value={chain.caip} className="bg-black text-white">
@@ -229,7 +229,7 @@ export function RightSidebar() {
                 placeholder="e.g. Swarm Execution Node"
                 value={newWalletLabel}
                 onChange={(e) => setNewWalletLabel(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500"
               />
             </div>
 
@@ -240,7 +240,7 @@ export function RightSidebar() {
                 required
                 value={newWalletPath}
                 onChange={(e) => setNewWalletPath(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-indigo-300 focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-violet-300 focus:outline-none focus:border-violet-500"
               />
             </div>
 
@@ -253,7 +253,7 @@ export function RightSidebar() {
 
             <button
               type="submit"
-              className="w-full py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
             >
               Derive & Save to Local Enclave
             </button>
@@ -296,7 +296,7 @@ export function RightSidebar() {
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-zinc-400">BIP-44 Path</span>
-                      <span className="text-indigo-400">{wallet.derivationPath}</span>
+                      <span className="text-violet-400">{wallet.derivationPath}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-zinc-400">CAIP Identifier</span>
@@ -317,7 +317,7 @@ export function RightSidebar() {
                     </p>
                     <button
                       onClick={() => copyToClipboard(JSON.stringify({ caip: wallet.chainCaip, address: wallet.address, derivation: wallet.derivationPath }), 'export')}
-                      className="mt-2 px-3 py-1.5 text-xs bg-black border border-white/15 rounded text-white hover:border-indigo-500/50 transition-colors"
+                      className="mt-2 px-3 py-1.5 text-xs bg-black border border-white/15 rounded text-white hover:border-violet-500/50 transition-colors"
                     >
                       {copiedText === 'export' ? 'Copied Public Spec' : 'Copy Public Credential Spec'}
                     </button>
@@ -351,7 +351,7 @@ export function RightSidebar() {
               <select
                 value={grantMerchantId}
                 onChange={(e) => setGrantMerchantId(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
               >
                 {merchants.map((m) => (
                   <option key={m.id} value={m.id} className="bg-black text-white">
@@ -368,7 +368,7 @@ export function RightSidebar() {
                 required
                 value={grantPlanName}
                 onChange={(e) => setGrantPlanName(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
               />
             </div>
 
@@ -381,7 +381,7 @@ export function RightSidebar() {
                   required
                   value={grantAmount}
                   onChange={(e) => setGrantAmount(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
                 />
               </div>
               <div className="space-y-2">
@@ -391,7 +391,7 @@ export function RightSidebar() {
                   required
                   value={grantIntervalDays}
                   onChange={(e) => setGrantIntervalDays(e.target.value)}
-                  className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
                 />
               </div>
             </div>
@@ -405,7 +405,7 @@ export function RightSidebar() {
 
             <button
               type="submit"
-              className="w-full py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
             >
               Sign EIP-712 Pull Grant
             </button>
@@ -454,7 +454,7 @@ export function RightSidebar() {
                 <button
                   type="button"
                   onClick={closeRightSidebar}
-                  className="w-full py-2 text-xs bg-indigo-600 text-white rounded hover:bg-indigo-500 transition-colors mt-2"
+                  className="w-full py-2 text-xs bg-violet-600 text-white rounded hover:bg-violet-500 transition-colors mt-2"
                 >
                   Done
                 </button>
@@ -468,7 +468,7 @@ export function RightSidebar() {
                     required
                     value={agentName}
                     onChange={(e) => setAgentName(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
 
@@ -477,7 +477,7 @@ export function RightSidebar() {
                   <select
                     value={agentInterface}
                     onChange={(e) => setAgentInterface(e.target.value as any)}
-                    className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
                   >
                     <option value="mcp" className="bg-black">Model Context Protocol (MCP)</option>
                     <option value="webmcp" className="bg-black">WebMCP Browser Agent</option>
@@ -495,7 +495,7 @@ export function RightSidebar() {
                     required
                     value={agentLimit}
                     onChange={(e) => setAgentLimit(e.target.value)}
-                    className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
                   />
                 </div>
 
@@ -513,7 +513,7 @@ export function RightSidebar() {
                               if (e.target.checked) setAgentScopes([...agentScopes, sc]);
                               else setAgentScopes(agentScopes.filter((s) => s !== sc));
                             }}
-                            className="rounded border-zinc-700 bg-black text-indigo-600 focus:ring-0"
+                            className="rounded border-zinc-700 bg-black text-violet-600 focus:ring-0"
                           />
                           <span>{sc}</span>
                         </label>
@@ -524,7 +524,7 @@ export function RightSidebar() {
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30"
+                  className="w-full py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
                 >
                   Generate Agent Session Key
                 </button>
@@ -541,7 +541,7 @@ export function RightSidebar() {
               return (
                 <>
                   <div className="p-4 rounded-lg bg-black border border-white/15 space-y-2">
-                    <div className="text-[11px] font-mono uppercase text-indigo-400">
+                    <div className="text-[11px] font-mono uppercase text-violet-400">
                       Rolling Context State
                     </div>
                     <div className="text-sm font-semibold text-white">
@@ -559,7 +559,7 @@ export function RightSidebar() {
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-zinc-400">Hard Cap</span>
-                      <span className="text-indigo-400 tabular-nums">${session?.spendingLimitUsd || '150.00'}</span>
+                      <span className="text-violet-400 tabular-nums">${session?.spendingLimitUsd || '150.00'}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-zinc-400">Token SHA-256</span>
@@ -575,7 +575,7 @@ export function RightSidebar() {
                     <div className="text-xs font-semibold text-zinc-200">Active Capability Scopes</div>
                     <div className="flex flex-wrap gap-1.5">
                       {session?.scopes?.map((sc) => (
-                        <span key={sc} className="px-2 py-0.5 rounded bg-black border border-white/15 text-[11px] font-mono text-indigo-300">
+                        <span key={sc} className="px-2 py-0.5 rounded bg-black border border-white/15 text-[11px] font-mono text-violet-300">
                           {sc}
                         </span>
                       ))}
@@ -614,7 +614,7 @@ export function RightSidebar() {
                 type="number"
                 value={localMaxTx}
                 onChange={(e) => setLocalMaxTx(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
               />
               <span className="text-[10px] text-zinc-500">Any pull/x402 charge above this requires explicit biometric confirmation.</span>
             </div>
@@ -625,7 +625,7 @@ export function RightSidebar() {
                 type="number"
                 value={localDailyCap}
                 onChange={(e) => setLocalDailyCap(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
               />
             </div>
 
@@ -635,13 +635,13 @@ export function RightSidebar() {
                 type="number"
                 value={localAutoLock}
                 onChange={(e) => setLocalAutoLock(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                className="w-full px-3 py-2 text-xs font-mono bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
             >
               Save Guardrail Rules
             </button>
@@ -680,7 +680,7 @@ export function RightSidebar() {
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-zinc-400">Network CAIP</span>
-                      <span className="text-indigo-400">{entry.chainCaip}</span>
+                      <span className="text-violet-400">{entry.chainCaip}</span>
                     </div>
                     <div className="flex justify-between py-1 border-b border-white/5">
                       <span className="text-zinc-400">Wallet</span>
@@ -689,7 +689,7 @@ export function RightSidebar() {
                     {entry.txHash && (
                       <div className="py-1 border-b border-white/5">
                         <div className="text-zinc-400 mb-1">On-Chain Tx Hash</div>
-                        <div className="text-[11px] text-indigo-400 break-all bg-zinc-950 p-2 rounded">
+                        <div className="text-[11px] text-violet-400 break-all bg-zinc-950 p-2 rounded">
                           {entry.txHash}
                         </div>
                       </div>

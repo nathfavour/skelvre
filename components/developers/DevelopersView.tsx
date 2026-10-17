@@ -174,7 +174,7 @@ curl -i https://skelvre.network/api/x402 \\
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              <span className="w-2 h-2 rounded-full bg-violet-500" />
               <h2 className="text-sm font-semibold text-white">
                 Live Interactive x402 Payment Required Sandbox
               </h2>
@@ -187,7 +187,7 @@ curl -i https://skelvre.network/api/x402 \\
           <div className="flex items-center gap-2">
             <button
               onClick={runX402Challenge}
-              className="px-4 py-2 text-xs font-mono font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors flex items-center gap-1.5 shadow-sm shadow-indigo-600/30"
+              className="px-4 py-2 text-xs font-mono font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors flex items-center gap-1.5 shadow-sm shadow-violet-600/30"
             >
               <Play className="w-3.5 h-3.5 fill-current" />
               <span>Step 1: Send Request (Trigger 402)</span>
@@ -232,7 +232,7 @@ curl -i https://skelvre.network/api/x402 \\
 
               <div>
                 <span className="text-zinc-500">{'// JSON Payload'}</span>
-                <pre className="text-indigo-300 text-[11px] mt-0.5">
+                <pre className="text-violet-300 text-[11px] mt-0.5">
                   {JSON.stringify(sandboxResponse.body, null, 2)}
                 </pre>
               </div>
@@ -326,7 +326,7 @@ curl -i https://skelvre.network/api/x402 \\
             />
             <button
               type="submit"
-              className="w-full py-2 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-500 transition-colors shadow-sm"
+              className="w-full py-2 text-xs font-semibold text-white bg-violet-600 rounded hover:bg-violet-500 transition-colors shadow-sm"
             >
               Register Application
             </button>
@@ -343,7 +343,7 @@ curl -i https://skelvre.network/api/x402 \\
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-2 py-0.5 rounded capitalize ${
-                    activeTab === tab ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+                    activeTab === tab ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
                   }`}
                 >
                   {tab}
@@ -361,7 +361,7 @@ curl -i https://skelvre.network/api/x402 \\
           <div className="p-3 rounded-lg bg-zinc-950 border border-white/5 text-xs text-zinc-400 space-y-1">
             <div className="font-semibold text-zinc-300">Infinite Schema Expansibility</div>
             <p className="text-[11px] leading-relaxed">
-              Every table stores a generic JSON <code className="text-indigo-400">metadata</code> column. You can inject custom gas overrides, dynamic subscription scaling caps, and novel cryptographic signature schemes without database schema migrations.
+              Every table stores a generic JSON <code className="text-violet-400">metadata</code> column. You can inject custom gas overrides, dynamic subscription scaling caps, and novel cryptographic signature schemes without database schema migrations.
             </p>
           </div>
         </div>

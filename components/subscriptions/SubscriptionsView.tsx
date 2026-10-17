@@ -72,7 +72,7 @@ export function SubscriptionsView() {
 
           <button
             onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
-            className="px-4 py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30 flex items-center gap-2"
+            className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
             <span>Create Subscription Grant</span>
@@ -86,7 +86,7 @@ export function SubscriptionsView() {
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-3 py-1.5 rounded transition-colors ${
-              statusFilter === 'all' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+              statusFilter === 'all' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
             }`}
           >
             All Grants ({grants.length})
@@ -94,7 +94,7 @@ export function SubscriptionsView() {
           <button
             onClick={() => setStatusFilter('active')}
             className={`px-3 py-1.5 rounded transition-colors ${
-              statusFilter === 'active' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+              statusFilter === 'active' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
             }`}
           >
             Active ({grants.filter((g) => g.status === 'active').length})
@@ -102,7 +102,7 @@ export function SubscriptionsView() {
           <button
             onClick={() => setStatusFilter('revoked')}
             className={`px-3 py-1.5 rounded transition-colors ${
-              statusFilter === 'revoked' ? 'bg-indigo-600 text-white' : 'text-zinc-400 hover:text-white'
+              statusFilter === 'revoked' ? 'bg-violet-600 text-white' : 'text-zinc-400 hover:text-white'
             }`}
           >
             Revoked ({grants.filter((g) => g.status === 'revoked').length})
@@ -124,7 +124,7 @@ export function SubscriptionsView() {
             <div
               key={grant.id}
               className={`p-5 rounded-xl bg-black border transition-all flex flex-col justify-between space-y-4 ${
-                isActive ? 'border-white/15 hover:border-indigo-500/50' : 'border-white/5 opacity-70'
+                isActive ? 'border-white/15 hover:border-violet-500/50' : 'border-white/5 opacity-70'
               }`}
             >
               {/* Header */}
@@ -205,7 +205,7 @@ export function SubscriptionsView() {
                         }
                       }}
                       disabled={isPullingId === grant.id}
-                      className="flex-1 py-2 text-xs font-mono font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-indigo-600/30 disabled:opacity-50"
+                      className="flex-1 py-2 text-xs font-mono font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors flex items-center justify-center gap-1.5 shadow-sm shadow-violet-600/30 disabled:opacity-50"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span>{isPullingId === grant.id ? 'Settling...' : 'Simulate Pull'}</span>

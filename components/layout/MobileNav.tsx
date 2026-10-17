@@ -59,7 +59,7 @@ export function MobileNav() {
           <div className="relative z-10 w-full bg-[#161412] border-b border-white/15 p-5 shadow-2xl space-y-4 animate-in slide-in-from-top duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center text-white text-xs font-mono font-bold">
+                <span className="w-6 h-6 rounded bg-violet-600 flex items-center justify-center text-white text-xs font-mono font-bold">
                   SK
                 </span>
                 <span className="font-bold text-white tracking-tight">Skelvre Menu</span>
@@ -83,11 +83,11 @@ export function MobileNav() {
                     onClick={() => setMobileNavOpen(false)}
                     className={`flex items-center gap-2.5 p-3 rounded-lg text-xs font-medium transition-all ${
                       isActive
-                        ? 'bg-black text-white border border-indigo-500/50 shadow-sm'
+                        ? 'bg-black text-white border border-violet-500/50 shadow-sm'
                         : 'bg-black/40 text-zinc-400 hover:text-zinc-200 border border-white/5'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-400' : 'text-zinc-500'}`} />
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-violet-400' : 'text-zinc-500'}`} />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -99,7 +99,7 @@ export function MobileNav() {
               <div className="text-zinc-400">
                 Active: <span className="text-white font-medium">{activeWallet.label}</span>
               </div>
-              <span className="text-indigo-400 tabular-nums">
+              <span className="text-violet-400 tabular-nums">
                 ${activeWallet.balanceUsd.toLocaleString()}
               </span>
             </div>
@@ -119,7 +119,7 @@ export function MobileNav() {
             {/* Grab Bar & Header */}
             <div className="p-4 border-b border-white/15 bg-black rounded-t-2xl flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                <div className="w-2 h-2 rounded-full bg-violet-500" />
                 <h3 className="text-sm font-semibold text-white">
                   {mobileDrawer.title || 'Interactive Drawer'}
                 </h3>
@@ -136,8 +136,8 @@ export function MobileNav() {
             <div className="flex-1 overflow-y-auto p-5 space-y-4">
               {mobileDrawer.type === 'sign_request' && activeSignRequest && (
                 <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-black border border-indigo-500/40 space-y-2">
-                    <div className="flex items-center gap-2 text-indigo-400 text-xs font-mono uppercase">
+                  <div className="p-4 rounded-lg bg-black border border-violet-500/40 space-y-2">
+                    <div className="flex items-center gap-2 text-violet-400 text-xs font-mono uppercase">
                       <Fingerprint className="w-4 h-4" />
                       <span>Signer Relay Authorization</span>
                     </div>
@@ -154,7 +154,7 @@ export function MobileNav() {
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="text-zinc-400">Network</span>
-                      <span className="text-indigo-400">{activeSignRequest.chainCaip}</span>
+                      <span className="text-violet-400">{activeSignRequest.chainCaip}</span>
                     </div>
                   </div>
 
@@ -167,7 +167,7 @@ export function MobileNav() {
                     </button>
                     <button
                       onClick={approveActiveSignRequest}
-                      className="flex-1 py-3 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 flex items-center justify-center gap-2"
+                      className="flex-1 py-3 text-xs font-bold text-white bg-violet-600 rounded-lg hover:bg-violet-500 flex items-center justify-center gap-2"
                     >
                       <Fingerprint className="w-4 h-4" />
                       <span>Authorize Enclave</span>

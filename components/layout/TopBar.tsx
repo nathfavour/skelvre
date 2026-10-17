@@ -38,9 +38,9 @@ export function TopBar() {
 
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-bold tracking-tight text-white hover:text-indigo-400 transition-colors whitespace-nowrap shrink-0"
+          className="flex items-center gap-2 text-lg font-bold tracking-tight text-white hover:text-violet-400 transition-colors whitespace-nowrap shrink-0"
         >
-          <span className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-xs font-mono font-bold shadow-sm shadow-indigo-600/50">
+          <span className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center text-white text-xs font-mono font-bold shadow-sm shadow-violet-600/50">
             SK
           </span>
           <span>Skelvre</span>
@@ -100,7 +100,7 @@ export function TopBar() {
           className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono rounded border transition-colors whitespace-nowrap shrink-0 ${
             isEnclaveLocked
               ? 'bg-amber-950/40 border-amber-500/40 text-amber-300 hover:bg-amber-900/50'
-              : 'bg-black border-white/15 text-zinc-300 hover:border-indigo-500/50'
+              : 'bg-black border-white/15 text-zinc-300 hover:border-violet-500/50'
           }`}
         >
           {isEnclaveLocked ? (
@@ -110,7 +110,7 @@ export function TopBar() {
             </>
           ) : (
             <>
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
+              <ShieldCheck className="w-3.5 h-3.5 text-violet-400" />
               <span>WebCrypto Enclave</span>
             </>
           )}
@@ -120,9 +120,9 @@ export function TopBar() {
         {isAuthenticated ? (
           <button
             onClick={() => openRightSidebar('wallet_details', activeWallet, 'Active Wallet & Keys')}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-black border border-white/15 rounded-lg hover:border-indigo-500/60 hover:bg-zinc-950 transition-colors whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-white bg-black border border-white/15 rounded-lg hover:border-violet-500/60 hover:bg-zinc-950 transition-colors whitespace-nowrap shrink-0"
           >
-            <span className="font-mono text-indigo-400">{chainInfo?.icon || '⚡'}</span>
+            <span className="font-mono text-violet-400">{chainInfo?.icon || '⚡'}</span>
             <span className="font-mono tabular-nums">
               {activeWallet.address.slice(0, 6)}...{activeWallet.address.slice(-4)}
             </span>
@@ -130,7 +130,7 @@ export function TopBar() {
         ) : (
           <button
             onClick={() => signInWithEthereum()}
-            className="px-4 py-2 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-indigo-600/30"
+            className="px-4 py-2 text-xs font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors whitespace-nowrap shrink-0 shadow-sm shadow-violet-600/30"
           >
             Connect SIWE
           </button>

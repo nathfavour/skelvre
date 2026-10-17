@@ -70,7 +70,7 @@ export function AgentsView() {
 
         <button
           onClick={() => openRightSidebar('create_agent_session', null, 'Provision MCP Agent Session')}
-          className="px-4 py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30 flex items-center gap-2 shrink-0"
+          className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2 shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Generate Agent Session</span>
@@ -97,7 +97,7 @@ export function AgentsView() {
                   onClick={() => setSelectedInterface(iface)}
                   className={`px-2 py-1 rounded uppercase transition-colors ${
                     selectedInterface === iface
-                      ? 'bg-indigo-600 text-white'
+                      ? 'bg-violet-600 text-white'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -123,13 +123,13 @@ export function AgentsView() {
                         'Agent Rolling Context'
                       )
                     }
-                    className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-indigo-500/50 cursor-pointer transition-all space-y-2 text-xs"
+                    className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all space-y-2 text-xs"
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-semibold text-white truncate max-w-[170px]">
                         {session.name}
                       </span>
-                      <span className="text-[10px] font-mono uppercase text-indigo-400 bg-indigo-950/60 px-1.5 py-0.5 rounded border border-indigo-500/40">
+                      <span className="text-[10px] font-mono uppercase text-violet-400 bg-violet-950/60 px-1.5 py-0.5 rounded border border-violet-500/40">
                         {session.interfaceType}
                       </span>
                     </div>
@@ -144,7 +144,7 @@ export function AgentsView() {
                       </div>
                       <div className="w-full h-1.5 rounded-full bg-zinc-900 overflow-hidden">
                         <div
-                          className="h-full bg-indigo-500 rounded-full transition-all"
+                          className="h-full bg-violet-500 rounded-full transition-all"
                           style={{ width: `${percentSpent}%` }}
                         />
                       </div>
@@ -154,7 +154,7 @@ export function AgentsView() {
                       <span className="truncate max-w-[140px]">
                         Hash: {session.tokenHash.slice(0, 10)}...
                       </span>
-                      <span className="text-indigo-400 hover:text-indigo-300">
+                      <span className="text-violet-400 hover:text-violet-300">
                         Inspect →
                       </span>
                     </div>
@@ -170,7 +170,7 @@ export function AgentsView() {
           {/* Canvas Top Bar */}
           <div className="flex items-center justify-between pb-3 border-b border-white/10 text-xs">
             <div className="flex items-center gap-2">
-              <Bot className="w-4 h-4 text-indigo-400" />
+              <Bot className="w-4 h-4 text-violet-400" />
               <span className="font-semibold text-white">
                 {activeChatSession?.title || 'Interactive MCP Session'}
               </span>
@@ -187,7 +187,7 @@ export function AgentsView() {
                   'Rolling Context Window'
                 )
               }
-              className="px-2.5 py-1 text-[11px] font-mono text-zinc-300 bg-zinc-950 border border-white/10 rounded hover:border-indigo-500/50 transition-colors"
+              className="px-2.5 py-1 text-[11px] font-mono text-zinc-300 bg-zinc-950 border border-white/10 rounded hover:border-violet-500/50 transition-colors"
             >
               Rolling Context (Edge Cached)
             </button>
@@ -210,7 +210,7 @@ export function AgentsView() {
                 <div
                   className={`max-w-[85%] rounded-xl p-3.5 text-xs leading-relaxed ${
                     msg.role === 'user'
-                      ? 'bg-indigo-950/60 border border-indigo-500/40 text-white'
+                      ? 'bg-violet-950/60 border border-violet-500/40 text-white'
                       : 'bg-zinc-950 border border-white/10 text-zinc-200'
                   }`}
                 >
@@ -219,7 +219,7 @@ export function AgentsView() {
                   {/* Tool Calls Inspector */}
                   {msg.toolCalls && msg.toolCalls.length > 0 && (
                     <div className="mt-3 space-y-2 border-t border-white/10 pt-2 font-mono text-[11px]">
-                      <div className="text-indigo-400 flex items-center gap-1.5 font-semibold">
+                      <div className="text-violet-400 flex items-center gap-1.5 font-semibold">
                         <Terminal className="w-3.5 h-3.5" />
                         <span>Tool Invocation: {msg.toolCalls[0].toolName}</span>
                       </div>
@@ -241,8 +241,8 @@ export function AgentsView() {
               </div>
             ))}
             {isSending && (
-              <div className="flex items-center gap-2 text-xs font-mono text-indigo-400 p-2">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+              <div className="flex items-center gap-2 text-xs font-mono text-violet-400 p-2">
+                <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />
                 <span>Interpreting prompt & verifying spending allowances...</span>
               </div>
             )}
@@ -252,19 +252,19 @@ export function AgentsView() {
           <div className="pt-2 pb-1 flex flex-wrap gap-1.5 text-[11px] font-mono">
             <button
               onClick={() => setPromptInput('Trigger x402 payment of 0.45 USDC for compiler worker')}
-              className="px-2 py-1 rounded bg-zinc-950 border border-white/10 text-zinc-400 hover:text-white hover:border-indigo-500/40 transition-colors"
+              className="px-2 py-1 rounded bg-zinc-950 border border-white/10 text-zinc-400 hover:text-white hover:border-violet-500/40 transition-colors"
             >
               + x402 Compiler Tool ($0.45)
             </button>
             <button
               onClick={() => setPromptInput('Check active session limits and remaining wallet balance')}
-              className="px-2 py-1 rounded bg-zinc-950 border border-white/10 text-zinc-400 hover:text-white hover:border-indigo-500/40 transition-colors"
+              className="px-2 py-1 rounded bg-zinc-950 border border-white/10 text-zinc-400 hover:text-white hover:border-violet-500/40 transition-colors"
             >
               + Audit Balances & Scopes
             </button>
             <button
               onClick={() => setPromptInput('Pull next recurring subscription for DeepSeek Inference')}
-              className="px-2 py-1 rounded bg-zinc-950 border border-white/10 text-zinc-400 hover:text-white hover:border-indigo-500/40 transition-colors"
+              className="px-2 py-1 rounded bg-zinc-950 border border-white/10 text-zinc-400 hover:text-white hover:border-violet-500/40 transition-colors"
             >
               + DeepSeek Pull
             </button>
@@ -277,12 +277,12 @@ export function AgentsView() {
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
               placeholder="Instruct agent (e.g. Execute x402 payment to DeepSeek, compile code, audit ledger)..."
-              className="flex-1 px-4 py-2.5 text-xs bg-zinc-950 border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500 font-mono"
+              className="flex-1 px-4 py-2.5 text-xs bg-zinc-950 border border-white/15 rounded-lg text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500 font-mono"
             />
             <button
               type="submit"
               disabled={isSending || !promptInput.trim()}
-              className="px-4 py-2.5 text-xs font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-600/30 flex items-center gap-1.5 disabled:opacity-40"
+              className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-1.5 disabled:opacity-40"
             >
               <span>Execute</span>
               <Send className="w-3.5 h-3.5" />
