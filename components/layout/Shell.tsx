@@ -17,7 +17,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <LeftSidebar />
 
         {/* Main Content Viewport */}
-        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 overflow-y-auto">
           {children}
         </main>
 

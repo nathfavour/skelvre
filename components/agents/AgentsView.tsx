@@ -108,7 +108,18 @@ export function AgentsView() {
 
             {/* Sessions List */}
             <div className="space-y-2.5 pt-1">
-              {filteredSessions.map((session) => {
+              {filteredSessions.length === 0 ? (
+                <div className="p-4 rounded-lg bg-zinc-950 border border-white/5 text-center space-y-2">
+                  <p className="text-zinc-500 text-[11px]">No active agent sessions</p>
+                  <button
+                    onClick={() => openRightSidebar('create_agent_session', null, 'Provision MCP Agent Session')}
+                    className="w-full py-1.5 px-2 text-[11px] font-mono text-violet-300 bg-violet-950/60 border border-violet-500/30 rounded hover:bg-violet-900/50 transition-colors"
+                  >
+                    + Generate Session
+                  </button>
+                </div>
+              ) : (
+                filteredSessions.map((session) => {
                 const percentSpent = Math.min(
                   100,
                   (session.currentSpentUsd / session.spendingLimitUsd) * 100
@@ -160,7 +171,7 @@ export function AgentsView() {
                     </div>
                   </div>
                 );
-              })}
+              }))}
             </div>
           </div>
         </div>
@@ -195,13 +206,24 @@ export function AgentsView() {
 
           {/* Chat Messages Stream */}
           <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-            {activeChatSession?.messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col space-y-1.5 ${
-                  msg.role === 'user' ? 'items-end' : 'items-start'
-                }`}
-              >
+            {(!activeChatSession?.messages || activeChatSession.messages.length === 0) ? (
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 font-mono text-xs text-zinc-500">
+                <Bot className="w-8 h-8 text-zinc-600" />
+                <div className="space-y-1">
+                  <div className="text-zinc-300 font-semibold font-sans">Skelvre MCP Agent Gateway Ready</div>
+                  <p className="text-[11px] max-w-sm text-zinc-500">
+                    Interact with your autonomous payment agent. You can request tool invocations, execute x402 micro-settlements, or inspect allowance status.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              activeChatSession.messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex flex-col space-y-1.5 ${
+                    msg.role === 'user' ? 'items-end' : 'items-start'
+                  }`}
+                >
                 <div className="text-[10px] font-mono text-zinc-500 px-1">
                   {msg.role === 'user' ? 'You (Client Enclave)' : 'Skelvre MCP Gateway'} ·{' '}
                   {new Date(msg.createdAt).toLocaleTimeString()}
@@ -239,7 +261,7 @@ export function AgentsView() {
                   )}
                 </div>
               </div>
-            ))}
+            )))}
             {isSending && (
               <div className="flex items-center gap-2 text-xs font-mono text-violet-400 p-2">
                 <span className="w-2 h-2 rounded-full bg-violet-500 animate-pulse" />

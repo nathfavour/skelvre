@@ -69,9 +69,9 @@ export function DevelopersView() {
       amountUsd: 0.25,
       recipient: '0x49c678a1bc1b69de78a6c8e31289cfc92f15e8b0',
       merchantName: 'DeepSeek Inference Router',
-      walletId: activeWallet.id,
-      walletAddress: activeWallet.address,
-      chainCaip: activeWallet.chainCaip,
+      walletId: activeWallet?.id || 'wal_enclave',
+      walletAddress: activeWallet?.address || '0x0000000000000000000000000000000000000000',
+      chainCaip: activeWallet?.chainCaip || 'eip155:8453',
       rawPayload: {
         url: '/api/x402',
         amount: '0.25',
@@ -83,7 +83,7 @@ export function DevelopersView() {
         const res = await fetch('/api/x402', {
           headers: {
             Authorization: `Skelvre-x402 sig_proof_0x${Date.now()}`,
-            'X-Skelvre-Signature': '0x71c387...enclave_signed',
+            'X-Skelvre-Signature': '0x_enclave_attested_signature',
           },
         });
         const data = await res.json();

@@ -120,29 +120,46 @@ export function WalletsView() {
       </div>
 
       {/* Wallets Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredWallets.map((wallet) => {
-          const chain = SUPPORTED_CHAINS[wallet.chainCaip];
-          const isSelected = wallet.id === activeWallet.id;
+      {filteredWallets.length === 0 ? (
+        <div className="p-12 rounded-xl bg-black border border-white/15 text-center space-y-4">
+          <WalletIcon className="w-10 h-10 text-zinc-600 mx-auto" />
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white">No Universal Wallets Found</h3>
+            <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+              Derive an enclave key or connect via SIWE/SIWS to create your first non-custodial multi-chain wallet.
+            </p>
+          </div>
+          <button
+            onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
+            className="px-4 py-2 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
+          >
+            + Derive Enclave Wallet
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredWallets.map((wallet) => {
+            const chain = SUPPORTED_CHAINS[wallet.chainCaip];
+            const isSelected = wallet.id === activeWallet?.id;
 
-          return (
-            <div
-              key={wallet.id}
-              className={`p-5 rounded-xl bg-black border transition-all flex flex-col justify-between space-y-4 ${
-                isSelected
-                  ? 'border-violet-500/60 shadow-lg shadow-violet-950/20'
-                  : 'border-white/15 hover:border-white/30'
-              }`}
-            >
-              {/* Card Header */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="flex items-center gap-1.5 text-zinc-300">
-                    <span>{chain?.icon || '⚡'}</span>
-                    <span className="font-semibold text-white">{chain?.name}</span>
-                  </span>
-                  <span className="text-[11px] text-zinc-500">{wallet.chainCaip}</span>
-                </div>
+            return (
+              <div
+                key={wallet.id}
+                className={`p-5 rounded-xl bg-black border transition-all flex flex-col justify-between space-y-4 ${
+                  isSelected
+                    ? 'border-violet-500/60 shadow-lg shadow-violet-950/20'
+                    : 'border-white/15 hover:border-white/30'
+                }`}
+              >
+                {/* Card Header */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs font-mono">
+                    <span className="flex items-center gap-1.5 text-zinc-300">
+                      <span>{chain?.icon || '⚡'}</span>
+                      <span className="font-semibold text-white">{chain?.name}</span>
+                    </span>
+                    <span className="text-[11px] text-zinc-500">{wallet.chainCaip}</span>
+                  </div>
 
                 <div className="flex items-center justify-between pt-1">
                   <h3 className="text-base font-bold text-white truncate max-w-[180px]">
@@ -219,6 +236,7 @@ export function WalletsView() {
           );
         })}
       </div>
+    )}
     </div>
   );
 }

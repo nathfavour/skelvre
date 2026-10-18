@@ -4,7 +4,6 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSkelvre } from '@/lib/store';
-import { SUPPORTED_CHAINS } from '@/lib/mock-data';
 import {
   X,
   LayoutDashboard,
@@ -13,101 +12,57 @@ import {
   Bot,
   Terminal,
   Settings,
-  Shield,
-  Plus,
   Fingerprint,
-  CheckCircle2,
-  Lock,
 } from 'lucide-react';
 
 export function MobileNav() {
   const pathname = usePathname();
   const {
-    mobileNavOpen,
-    setMobileNavOpen,
     mobileDrawer,
     closeMobileDrawer,
-    wallets,
-    activeWallet,
-    setActiveWalletId,
     activeSignRequest,
     approveActiveSignRequest,
     rejectActiveSignRequest,
-    openMobileDrawer,
-    isEnclaveLocked,
   } = useSkelvre();
 
   const navLinks = [
     { label: 'Overview', href: '/', icon: LayoutDashboard },
     { label: 'Wallets', href: '/wallets', icon: WalletIcon },
-    { label: 'Subscriptions', href: '/subscriptions', icon: Repeat },
-    { label: 'Agents & MCP', href: '/agents', icon: Bot },
-    { label: 'Developers & x402', href: '/developers', icon: Terminal },
-    { label: 'Settings & Security', href: '/settings', icon: Settings },
+    { label: 'Subs', href: '/subscriptions', icon: Repeat },
+    { label: 'Agents', href: '/agents', icon: Bot },
+    { label: 'Devs', href: '/developers', icon: Terminal },
+    { label: 'Settings', href: '/settings', icon: Settings },
   ];
 
   return (
     <>
-      {/* 1. MOBILE TOP DRAWER (Navigation Sheet) */}
-      {mobileNavOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-start">
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
-            onClick={() => setMobileNavOpen(false)}
-          />
-
-          <div className="relative z-10 w-full bg-[#161412] border-b border-white/15 p-5 shadow-2xl space-y-4 animate-in slide-in-from-top duration-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-6 h-6 rounded bg-violet-600 flex items-center justify-center text-white text-xs font-mono font-bold">
-                  SK
-                </span>
-                <span className="font-bold text-white tracking-tight">Skelvre Menu</span>
-              </div>
-              <button
-                onClick={() => setMobileNavOpen(false)}
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-white bg-black border border-white/10"
+      {/* 1. MOBILE BOTTOM NAVBAR (Clean thumb navigation bar) */}
+      <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden h-16 bg-black/95 backdrop-blur-md border-t border-white/15 px-2 flex items-center justify-around">
+        {navLinks.map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-medium transition-colors ${
+                isActive ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <div
+                className={`p-1 rounded-md transition-all ${
+                  isActive ? 'bg-violet-950/70 border border-violet-500/40 text-violet-300' : ''
+                }`}
               >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <nav className="grid grid-cols-2 gap-2">
-              {navLinks.map((item) => {
-                const isActive = pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileNavOpen(false)}
-                    className={`flex items-center gap-2.5 p-3 rounded-lg text-xs font-medium transition-all ${
-                      isActive
-                        ? 'bg-black text-white border border-violet-500/50 shadow-sm'
-                        : 'bg-black/40 text-zinc-400 hover:text-zinc-200 border border-white/5'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-violet-400' : 'text-zinc-500'}`} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Quick Wallet Switcher */}
-            <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs font-mono">
-              <div className="text-zinc-400">
-                Active: <span className="text-white font-medium">{activeWallet.label}</span>
+                <Icon className="w-4 h-4" />
               </div>
-              <span className="text-violet-400 tabular-nums">
-                ${activeWallet.balanceUsd.toLocaleString()}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+              <span className="mt-0.5 tracking-tight">{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* 2. MOBILE BOTTOM DRAWER (Pulls up to 100dvh for detailed interactions) */}
+      {/* 2. MOBILE BOTTOM DRAWER (Pulls up to full height 85-100dvh for signing & interactions) */}
       {mobileDrawer.isOpen && (
         <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end">
           <div

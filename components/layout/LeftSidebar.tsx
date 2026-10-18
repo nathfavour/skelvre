@@ -89,34 +89,46 @@ export function LeftSidebar() {
         </div>
 
         <div className="space-y-2">
-          {wallets.map((wallet) => {
-            const chain = SUPPORTED_CHAINS[wallet.chainCaip];
-            const isSelected = wallet.id === activeWallet.id;
-            return (
+          {wallets.length === 0 ? (
+            <div className="p-3 rounded bg-zinc-950 border border-white/5 text-center text-xs space-y-2">
+              <p className="text-zinc-500 text-[11px]">No active enclave wallets</p>
               <button
-                key={wallet.id}
-                onClick={() => setActiveWalletId(wallet.id)}
-                className={`w-full text-left p-2 rounded border transition-all text-xs ${
-                  isSelected
-                    ? 'bg-zinc-950 border-violet-500/50 text-white'
-                    : 'bg-black border-transparent text-zinc-400 hover:text-zinc-300 hover:bg-zinc-950/60'
-                }`}
+                onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
+                className="w-full py-1.5 px-2 text-[11px] font-mono text-violet-300 bg-violet-950/50 border border-violet-500/30 rounded hover:bg-violet-900/50 transition-colors"
               >
-                <div className="flex items-center justify-between font-mono">
-                  <span className="font-medium text-white truncate max-w-[120px]">
-                    {wallet.label}
-                  </span>
-                  <span className="text-[11px] text-violet-400">
-                    {chain?.symbol || 'ETH'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono mt-1 tabular-nums">
-                  <span>{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</span>
-                  <span className="text-zinc-300 font-medium">${wallet.balanceUsd.toLocaleString()}</span>
-                </div>
+                + Derive First Wallet
               </button>
-            );
-          })}
+            </div>
+          ) : (
+            wallets.map((wallet) => {
+              const chain = SUPPORTED_CHAINS[wallet.chainCaip];
+              const isSelected = wallet.id === activeWallet?.id;
+              return (
+                <button
+                  key={wallet.id}
+                  onClick={() => setActiveWalletId(wallet.id)}
+                  className={`w-full text-left p-2 rounded border transition-all text-xs ${
+                    isSelected
+                      ? 'bg-zinc-950 border-violet-500/50 text-white'
+                      : 'bg-black border-transparent text-zinc-400 hover:text-zinc-300 hover:bg-zinc-950/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-mono">
+                    <span className="font-medium text-white truncate max-w-[120px]">
+                      {wallet.label}
+                    </span>
+                    <span className="text-[11px] text-violet-400">
+                      {chain?.symbol || 'ETH'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono mt-1 tabular-nums">
+                    <span>{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</span>
+                    <span className="text-zinc-300 font-medium">${wallet.balanceUsd.toFixed(2)}</span>
+                  </div>
+                </button>
+              );
+            })
+          )}
         </div>
       </div>
 

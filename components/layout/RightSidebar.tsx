@@ -23,6 +23,7 @@ import {
 export function RightSidebar() {
   const {
     rightSidebar,
+    openRightSidebar,
     closeRightSidebar,
     activeSignRequest,
     approveActiveSignRequest,
@@ -265,6 +266,19 @@ export function RightSidebar() {
           <div className="space-y-4">
             {(() => {
               const wallet = (rightSidebar.data as Wallet) || activeWallet;
+              if (!wallet) {
+                return (
+                  <div className="p-8 text-center text-xs font-mono text-zinc-500 space-y-2">
+                    <div>No wallet active in enclave</div>
+                    <button
+                      onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
+                      className="px-3 py-1.5 text-xs text-violet-300 bg-violet-950/60 border border-violet-500/30 rounded"
+                    >
+                      + Derive Wallet
+                    </button>
+                  </div>
+                );
+              }
               const chain = SUPPORTED_CHAINS[wallet.chainCaip];
               return (
                 <>
@@ -330,12 +344,26 @@ export function RightSidebar() {
 
         {/* VIEW 4: CREATE RECURRING SUBSCRIPTION GRANT */}
         {rightSidebar.type === 'create_grant' && (
+          !activeWallet && wallets.length === 0 ? (
+            <div className="p-8 text-center space-y-3 font-mono text-xs text-zinc-400">
+              <p>You must connect or derive an enclave wallet before creating a recurring pull grant.</p>
+              <button
+                type="button"
+                onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors"
+              >
+                + Derive First Wallet
+              </button>
+            </div>
+          ) : (
           <form
             onSubmit={async (e) => {
               e.preventDefault();
+              const targetWalletId = activeWallet?.id || wallets[0]?.id;
+              if (!targetWalletId) return;
               await createSubscriptionGrant({
                 merchantId: grantMerchantId,
-                walletId: activeWallet.id,
+                walletId: targetWalletId,
                 assetAddress: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
                 assetSymbol: 'USDC',
                 maxAmountPerInterval: grantAmount,
@@ -410,6 +438,7 @@ export function RightSidebar() {
               Sign EIP-712 Pull Grant
             </button>
           </form>
+          )
         )}
 
         {/* VIEW 5: CREATE AGENT SESSION */}
@@ -417,9 +446,10 @@ export function RightSidebar() {
           <form
             onSubmit={async (e) => {
               e.preventDefault();
+              const targetWalletId = activeWallet?.id || wallets[0]?.id || 'wal_enclave';
               const { secretToken } = await createAgentSession({
                 name: agentName,
-                walletId: activeWallet.id,
+                walletId: targetWalletId,
                 interfaceType: agentInterface,
                 scopes: agentScopes,
                 spendingLimitUsd: parseFloat(agentLimit),

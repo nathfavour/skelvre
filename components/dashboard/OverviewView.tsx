@@ -9,45 +9,38 @@ import {
   Wallet as WalletIcon,
   Repeat,
   Bot,
-  Zap,
-  ArrowUpRight,
-  ShieldCheck,
-  CheckCircle2,
-  AlertTriangle,
-  Fingerprint,
+  Activity,
   ChevronRight,
   Terminal,
-  Activity,
-  Layers,
+  ShieldCheck,
+  Plus,
+  KeyRound,
 } from 'lucide-react';
 
 export function OverviewView() {
   const {
     isAuthenticated,
     wallets,
-    activeWallet,
     grants,
     agentSessions,
     ledger,
     openRightSidebar,
     signInWithEthereum,
     signInWithSolana,
-    requestSigning,
-    guardrails,
   } = useSkelvre();
 
   const [filterLedger, setFilterLedger] = useState<'all' | 'success' | 'blocked'>('all');
 
-  // Compute key totals
-  const totalBalanceUsd = wallets.reduce((acc, w) => acc + w.balanceUsd, 0);
+  // Compute key totals from real active user data
+  const totalBalanceUsd = wallets.reduce((acc, w) => acc + (w.balanceUsd || 0), 0);
   const activeGrants = grants.filter((g) => g.status === 'active');
   const monthlyBurnUsd = activeGrants.reduce(
-    (acc, g) => acc + parseFloat(g.maxAmountPerInterval),
+    (acc, g) => acc + (parseFloat(g.maxAmountPerInterval) || 0),
     0
   );
   const totalSettledUsd = ledger
     .filter((l) => l.status === 'success')
-    .reduce((acc, l) => acc + l.amountUsd, 0);
+    .reduce((acc, l) => acc + (l.amountUsd || 0), 0);
 
   const filteredLedger = ledger.filter((item) => {
     if (filterLedger === 'success') return item.status === 'success';
@@ -63,9 +56,9 @@ export function OverviewView() {
           <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
             <span>Skelvre Multi-Chain Gateway</span>
             <span aria-hidden="true">·</span>
-            <span className="text-emerald-400">Enclave Active</span>
+            <span className="text-emerald-400">Turso Edge Ready</span>
             <span aria-hidden="true">·</span>
-            <span>v1.4 Edge</span>
+            <span>Zero-Modal Architecture</span>
           </div>
 
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white text-balance">
@@ -77,21 +70,41 @@ export function OverviewView() {
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
-              className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
-            >
-              <Repeat className="w-4 h-4" />
-              <span>Authorize New Subscription</span>
-            </button>
+            {!isAuthenticated ? (
+              <>
+                <button
+                  onClick={() => signInWithEthereum()}
+                  className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  <span>Connect with SIWE</span>
+                </button>
+                <button
+                  onClick={() => signInWithSolana()}
+                  className="px-4 py-2.5 text-xs font-semibold text-zinc-200 bg-black border border-white/15 rounded-lg hover:border-violet-500/50 hover:bg-zinc-950 transition-colors flex items-center gap-2"
+                >
+                  <span>Connect with SIWS</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
+                  className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
+                >
+                  <Repeat className="w-4 h-4" />
+                  <span>Authorize New Subscription</span>
+                </button>
 
-            <button
-              onClick={() => openRightSidebar('create_agent_session', null, 'Provision MCP Agent Session')}
-              className="px-4 py-2.5 text-xs font-semibold text-zinc-200 bg-black border border-white/15 rounded-lg hover:border-violet-500/50 hover:bg-zinc-950 transition-colors flex items-center gap-2"
-            >
-              <Bot className="w-4 h-4" />
-              <span>Deploy MCP Session</span>
-            </button>
+                <button
+                  onClick={() => openRightSidebar('create_agent_session', null, 'Provision MCP Agent Session')}
+                  className="px-4 py-2.5 text-xs font-semibold text-zinc-200 bg-black border border-white/15 rounded-lg hover:border-violet-500/50 hover:bg-zinc-950 transition-colors flex items-center gap-2"
+                >
+                  <Bot className="w-4 h-4" />
+                  <span>Deploy MCP Session</span>
+                </button>
+              </>
+            )}
 
             <Link
               href="/developers"
@@ -104,7 +117,7 @@ export function OverviewView() {
         </div>
 
         {/* Hero Background Illustration */}
-        <div className="absolute -right-10 -bottom-10 w-96 h-96 opacity-30 pointer-events-none hidden md:block">
+        <div className="absolute -right-10 -bottom-10 w-96 h-96 opacity-25 pointer-events-none hidden md:block">
           <Image
             src="/assets/enclave_core.jpg"
             alt="Cryptographic Enclave Architecture"
@@ -116,7 +129,7 @@ export function OverviewView() {
         </div>
       </div>
 
-      {/* 2. STATS & REVENUE METRICS ROW (Single-elevation, Tabular figures) */}
+      {/* 2. STATS & REVENUE METRICS ROW */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="p-5 rounded-xl bg-black border border-white/15 space-y-2">
@@ -125,10 +138,10 @@ export function OverviewView() {
             <WalletIcon className="w-4 h-4 text-violet-400" />
           </div>
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
-            ${totalBalanceUsd.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            ${totalBalanceUsd.toFixed(2)}
           </div>
           <div className="text-xs text-zinc-400 font-mono">
-            Across {wallets.length} multi-chain derivation paths
+            Across {wallets.length} active derivation paths
           </div>
         </div>
 
@@ -183,7 +196,7 @@ export function OverviewView() {
             <div>
               <h2 className="text-sm font-semibold text-white">Universal Multi-Chain Wallets</h2>
               <p className="text-xs text-zinc-400 font-mono mt-0.5">
-                CAIP-2 Decoupled Derivations (Zero Hardcoding)
+                CAIP-2 Decoupled Derivations
               </p>
             </div>
             <button
@@ -196,38 +209,51 @@ export function OverviewView() {
           </div>
 
           <div className="space-y-2.5">
-            {wallets.map((w) => {
-              const chain = SUPPORTED_CHAINS[w.chainCaip];
-              return (
-                <div
-                  key={w.id}
-                  onClick={() => openRightSidebar('wallet_details', w, 'Wallet Parameters')}
-                  className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
+            {wallets.length === 0 ? (
+              <div className="p-6 rounded-lg bg-zinc-950 border border-white/5 text-center space-y-3">
+                <WalletIcon className="w-6 h-6 text-zinc-600 mx-auto" />
+                <div className="text-xs text-zinc-400">No multi-chain wallets linked yet</div>
+                <button
+                  onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
+                  className="px-3 py-1.5 text-xs font-mono text-violet-300 bg-violet-950/60 border border-violet-500/40 rounded-lg hover:bg-violet-900/50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-base">{chain?.icon || '⚡'}</span>
-                    <div>
-                      <div className="font-semibold text-white flex items-center gap-2">
-                        <span>{w.label}</span>
-                        {w.isPrimary && (
-                          <span className="text-[10px] text-violet-400 font-mono bg-violet-950/60 px-1.5 py-0.2 rounded border border-violet-500/40">
-                            Primary
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-zinc-500 font-mono text-[11px] mt-0.5">
-                        {w.address.slice(0, 8)}...{w.address.slice(-6)} · {chain?.name}
+                  + Derive Enclave Wallet
+                </button>
+              </div>
+            ) : (
+              wallets.map((w) => {
+                const chain = SUPPORTED_CHAINS[w.chainCaip];
+                return (
+                  <div
+                    key={w.id}
+                    onClick={() => openRightSidebar('wallet_details', w, 'Wallet Parameters')}
+                    className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">{chain?.icon || '⚡'}</span>
+                      <div>
+                        <div className="font-semibold text-white flex items-center gap-2">
+                          <span>{w.label}</span>
+                          {w.isPrimary && (
+                            <span className="text-[10px] text-violet-400 font-mono bg-violet-950/60 px-1.5 py-0.2 rounded border border-violet-500/40">
+                              Primary
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-zinc-500 font-mono text-[11px] mt-0.5">
+                          {w.address.slice(0, 8)}...{w.address.slice(-6)} · {chain?.name}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right font-mono tabular-nums">
-                    <div className="font-bold text-white">${w.balanceUsd.toLocaleString()}</div>
-                    <div className="text-[11px] text-zinc-400">{w.nativeBalance}</div>
+                    <div className="text-right font-mono tabular-nums">
+                      <div className="font-bold text-white">${(w.balanceUsd || 0).toFixed(2)}</div>
+                      <div className="text-[11px] text-zinc-400">{w.nativeBalance || '0.00 ETH'}</div>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -250,34 +276,47 @@ export function OverviewView() {
           </div>
 
           <div className="space-y-2.5">
-            {grants.slice(0, 3).map((g) => (
-              <div
-                key={g.id}
-                onClick={() => openRightSidebar('grant_details', g, 'Allowance Grant Proof')}
-                className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
-              >
-                <div>
-                  <div className="font-semibold text-white">{g.merchantName}</div>
-                  <div className="text-zinc-400 text-[11px] font-mono mt-0.5">
-                    {g.metadata?.planName || 'Recurring Stream'} · Every {Math.round(g.billingIntervalSeconds / 86400)}d
-                  </div>
-                </div>
-
-                <div className="text-right font-mono tabular-nums">
-                  <div className="font-bold text-white">
-                    ${g.maxAmountPerInterval} {g.assetSymbol}
-                  </div>
-                  <div className="text-[10px] text-zinc-400">
-                    Next: {new Date(g.nextChargeAt).toLocaleDateString()}
-                  </div>
-                </div>
+            {grants.length === 0 ? (
+              <div className="p-6 rounded-lg bg-zinc-950 border border-white/5 text-center space-y-3">
+                <Repeat className="w-6 h-6 text-zinc-600 mx-auto" />
+                <div className="text-xs text-zinc-400">No active subscription pull grants</div>
+                <button
+                  onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
+                  className="px-3 py-1.5 text-xs font-mono text-violet-300 bg-violet-950/60 border border-violet-500/40 rounded-lg hover:bg-violet-900/50 transition-colors"
+                >
+                  + Authorize First Subscription
+                </button>
               </div>
-            ))}
+            ) : (
+              grants.slice(0, 3).map((g) => (
+                <div
+                  key={g.id}
+                  onClick={() => openRightSidebar('grant_details', g, 'Allowance Grant Proof')}
+                  className="p-3 rounded-lg bg-zinc-950 border border-white/10 hover:border-violet-500/50 cursor-pointer transition-all flex items-center justify-between text-xs"
+                >
+                  <div>
+                    <div className="font-semibold text-white">{g.merchantName}</div>
+                    <div className="text-zinc-400 text-[11px] font-mono mt-0.5">
+                      {g.metadata?.planName || 'Recurring Stream'} · Every {Math.round(g.billingIntervalSeconds / 86400)}d
+                    </div>
+                  </div>
+
+                  <div className="text-right font-mono tabular-nums">
+                    <div className="font-bold text-white">
+                      ${g.maxAmountPerInterval} {g.assetSymbol}
+                    </div>
+                    <div className="text-[10px] text-zinc-400">
+                      Next: {new Date(g.nextChargeAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* 4. SETTLEMENT LEDGER AUDIT TRAIL (High-density, Anti-slop table) */}
+      {/* 4. SETTLEMENT LEDGER AUDIT TRAIL */}
       <div className="p-5 rounded-xl bg-black border border-white/15 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -287,7 +326,6 @@ export function OverviewView() {
             </p>
           </div>
 
-          {/* Interactive Filter Control */}
           <div className="flex items-center gap-1 p-1 bg-zinc-950 rounded-lg border border-white/10 text-xs font-mono">
             <button
               onClick={() => setFilterLedger('all')}
@@ -316,69 +354,75 @@ export function OverviewView() {
           </div>
         </div>
 
-        {/* High-density grid */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-mono">
-            <thead>
-              <tr className="border-b border-white/10 text-zinc-400 pb-2">
-                <th className="py-2.5 font-medium">Timestamp</th>
-                <th className="py-2.5 font-medium">Merchant / Destination</th>
-                <th className="py-2.5 font-medium">Amount</th>
-                <th className="py-2.5 font-medium">Network</th>
-                <th className="py-2.5 font-medium">Status</th>
-                <th className="py-2.5 font-medium text-right">Proof</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {filteredLedger.map((entry) => {
-                const chain = SUPPORTED_CHAINS[entry.chainCaip];
-                return (
-                  <tr
-                    key={entry.id}
-                    onClick={() => openRightSidebar('ledger_audit', entry, 'Settlement Audit Details')}
-                    className="hover:bg-zinc-950/80 cursor-pointer transition-colors"
-                  >
-                    <td className="py-3 text-zinc-400 tabular-nums">
-                      {new Date(entry.createdAt).toLocaleTimeString()}
-                    </td>
-                    <td className="py-3 text-white font-sans font-medium">
-                      {entry.merchantName}
-                    </td>
-                    <td className="py-3 text-white tabular-nums font-bold">
-                      {entry.amount} {entry.assetSymbol}
-                    </td>
-                    <td className="py-3 text-zinc-400">
-                      {chain?.name || entry.chainCaip}
-                    </td>
-                    <td className="py-3">
-                      {entry.status === 'success' && (
-                        <span className="text-emerald-400">Settled</span>
-                      )}
-                      {entry.status === 'blocked_by_guardrail' && (
-                        <span className="text-amber-400">Blocked by Cap</span>
-                      )}
-                      {entry.status === 'pending' && (
-                        <span className="text-zinc-400">Pending</span>
-                      )}
-                    </td>
-                    <td className="py-3 text-right">
-                      {entry.txHash ? (
-                        <span className="text-violet-400 hover:text-violet-300">
-                          {entry.txHash.slice(0, 6)}...{entry.txHash.slice(-4)}
-                        </span>
-                      ) : (
-                        <span className="text-zinc-600">None</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        {filteredLedger.length === 0 ? (
+          <div className="py-10 text-center font-mono text-xs text-zinc-500 space-y-1">
+            <Activity className="w-5 h-5 mx-auto text-zinc-600" />
+            <div>No settlement transactions recorded yet on edge ledger</div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs font-mono">
+              <thead>
+                <tr className="border-b border-white/10 text-zinc-400 pb-2">
+                  <th className="py-2.5 font-medium">Timestamp</th>
+                  <th className="py-2.5 font-medium">Merchant / Destination</th>
+                  <th className="py-2.5 font-medium">Amount</th>
+                  <th className="py-2.5 font-medium">Network</th>
+                  <th className="py-2.5 font-medium">Status</th>
+                  <th className="py-2.5 font-medium text-right">Proof</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredLedger.map((entry) => {
+                  const chain = SUPPORTED_CHAINS[entry.chainCaip];
+                  return (
+                    <tr
+                      key={entry.id}
+                      onClick={() => openRightSidebar('ledger_audit', entry, 'Settlement Audit Details')}
+                      className="hover:bg-zinc-950/80 cursor-pointer transition-colors"
+                    >
+                      <td className="py-3 text-zinc-400 tabular-nums">
+                        {new Date(entry.createdAt).toLocaleTimeString()}
+                      </td>
+                      <td className="py-3 text-white font-sans font-medium">
+                        {entry.merchantName}
+                      </td>
+                      <td className="py-3 text-white tabular-nums font-bold">
+                        {entry.amount} {entry.assetSymbol}
+                      </td>
+                      <td className="py-3 text-zinc-400">
+                        {chain?.name || entry.chainCaip}
+                      </td>
+                      <td className="py-3">
+                        {entry.status === 'success' && (
+                          <span className="text-emerald-400">Settled</span>
+                        )}
+                        {entry.status === 'blocked_by_guardrail' && (
+                          <span className="text-amber-400">Blocked by Cap</span>
+                        )}
+                        {entry.status === 'pending' && (
+                          <span className="text-zinc-400">Pending</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-right">
+                        {entry.txHash ? (
+                          <span className="text-violet-400 hover:text-violet-300">
+                            {entry.txHash.slice(0, 6)}...{entry.txHash.slice(-4)}
+                          </span>
+                        ) : (
+                          <span className="text-zinc-600">None</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* 5. ARCHITECTURAL SHOWCASE SECTION (Anti-slop, claim-to-proof adjacent) */}
+      {/* 5. ARCHITECTURAL SHOWCASE SECTION */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         <div className="p-6 rounded-xl bg-black border border-white/15 flex flex-col justify-between space-y-4">
           <div className="space-y-3">

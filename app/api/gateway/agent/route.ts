@@ -13,9 +13,11 @@ export async function POST(req: NextRequest) {
     if (apiKey) {
       try {
         const ai = new GoogleGenAI({ apiKey });
+        const walletAddress = activeWallet?.address || 'Not Connected';
+        const walletBalance = activeWallet?.balanceUsd != null ? `$${activeWallet.balanceUsd}` : '$0.00';
         const systemInstruction = `You are Skelvre Autonomous Agent Gateway, a high-precision, non-custodial agentic payment runtime.
 You operate under the Model Context Protocol (MCP) and x402 micro-payment standard.
-User active wallet: ${activeWallet?.address || '0x71C387A9F439fDE79BfE353Fa7631742456e43B1'} on ${activeWallet?.chainCaip || 'eip155:8453'} with balance $${activeWallet?.balanceUsd || '14250.80'}.
+User active wallet: ${walletAddress} on ${activeWallet?.chainCaip || 'None'} with balance ${walletBalance}.
 Active subscription grants: ${JSON.stringify(grants || [])}.
 Respond crisply and authoritatively as a financial and tool-execution agent.
 If the user asks to pay, purchase compute, compile code via remote tools, or trigger x402 endpoints, describe the tool call, the exact payment asset (e.g. USDC), and confirm execution.
@@ -74,8 +76,8 @@ Keep responses under 3 sentences. No markdown fluff or unsolicited emojis.`;
               id: `led_gemini_${Date.now()}`,
               merchantId: 'mer_cursor_mcp_hub',
               merchantName: 'Cursor MCP Cloud Daemon',
-              walletId: activeWallet?.id || 'wal_base_agent_hot',
-              walletAddress: activeWallet?.address || '0x71C387A9F439fDE79BfE353Fa7631742456e43B1',
+              walletId: activeWallet?.id || 'wal_enclave',
+              walletAddress: activeWallet?.address || '0x0000000000000000000000000000000000000000',
               chainCaip: activeWallet?.chainCaip || 'eip155:8453',
               amount: '0.45',
               assetSymbol: 'USDC',

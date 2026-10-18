@@ -115,18 +115,35 @@ export function SubscriptionsView() {
       </div>
 
       {/* Grants Cards List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredGrants.map((grant) => {
-          const isActive = grant.status === 'active';
-          const intervalDays = Math.round(grant.billingIntervalSeconds / 86400);
+      {filteredGrants.length === 0 ? (
+        <div className="p-12 rounded-xl bg-black border border-white/15 text-center space-y-4">
+          <Repeat className="w-10 h-10 text-zinc-600 mx-auto" />
+          <div className="space-y-1">
+            <h3 className="text-base font-bold text-white">No Subscription Grants</h3>
+            <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+              Create a cryptographic pull grant to authorize automated recurring billing for verified merchants.
+            </p>
+          </div>
+          <button
+            onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
+            className="px-4 py-2 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
+          >
+            + Authorize Subscription Grant
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredGrants.map((grant) => {
+            const isActive = grant.status === 'active';
+            const intervalDays = Math.round(grant.billingIntervalSeconds / 86400);
 
-          return (
-            <div
-              key={grant.id}
-              className={`p-5 rounded-xl bg-black border transition-all flex flex-col justify-between space-y-4 ${
-                isActive ? 'border-white/15 hover:border-violet-500/50' : 'border-white/5 opacity-70'
-              }`}
-            >
+            return (
+              <div
+                key={grant.id}
+                className={`p-5 rounded-xl bg-black border transition-all flex flex-col justify-between space-y-4 ${
+                  isActive ? 'border-white/15 hover:border-violet-500/50' : 'border-white/5 opacity-70'
+                }`}
+              >
               {/* Header */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs font-mono">
@@ -229,6 +246,7 @@ export function SubscriptionsView() {
           );
         })}
       </div>
+    )}
     </div>
   );
 }

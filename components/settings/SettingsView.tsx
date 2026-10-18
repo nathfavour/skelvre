@@ -86,16 +86,16 @@ export function SettingsView() {
           </div>
 
           <div className="p-2.5 rounded bg-zinc-950 border border-white/5 font-mono text-xs text-zinc-300 break-all">
-            {currentUser.primaryAddress}
+            {currentUser && currentUser.authMethod === 'siwe' ? currentUser.primaryAddress : 'Not connected'}
           </div>
 
           <div className="flex items-center justify-between pt-1 text-xs">
-            <span className="text-zinc-500 font-mono">Linked Email: {currentUser.email || 'None'}</span>
+            <span className="text-zinc-500 font-mono">Linked Email: {currentUser?.email || 'None'}</span>
             <button
               onClick={signInWithEthereum}
               className="text-xs text-violet-400 hover:text-violet-300 font-medium"
             >
-              Re-Authenticate
+              {currentUser && currentUser.authMethod === 'siwe' ? 'Re-Authenticate' : 'Connect SIWE'}
             </button>
           </div>
         </div>
@@ -118,16 +118,18 @@ export function SettingsView() {
           </div>
 
           <div className="p-2.5 rounded bg-zinc-950 border border-white/5 font-mono text-xs text-zinc-300 break-all">
-            8r3Bf9xK2TqM5Lz7pWv4XyNeJkAa1bCdEfGhIjKlMnOp
+            {currentUser && currentUser.authMethod === 'siws' ? currentUser.primaryAddress : 'Not connected'}
           </div>
 
           <div className="flex items-center justify-between pt-1 text-xs">
-            <span className="text-emerald-400 font-mono">Active Swarm Key</span>
+            <span className="text-zinc-500 font-mono">
+              {currentUser && currentUser.authMethod === 'siws' ? 'Active SVM Session' : 'No SVM key linked'}
+            </span>
             <button
               onClick={signInWithSolana}
               className="text-xs text-violet-400 hover:text-violet-300 font-medium"
             >
-              Switch SVM Session
+              {currentUser && currentUser.authMethod === 'siws' ? 'Re-Authenticate' : 'Connect SIWS'}
             </button>
           </div>
         </div>
