@@ -176,7 +176,7 @@ export function SubscriptionsView() {
                     <Clock className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Next Charge</span>
                   </span>
-                  <span className="text-white tabular-nums">
+                  <span className="text-white tabular-nums" suppressHydrationWarning>
                     {new Date(grant.nextChargeAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -185,7 +185,7 @@ export function SubscriptionsView() {
                     <Calendar className="w-3.5 h-3.5 text-zinc-500" />
                     <span>Created</span>
                   </span>
-                  <span className="text-zinc-400 tabular-nums">
+                  <span className="text-zinc-400 tabular-nums" suppressHydrationWarning>
                     {new Date(grant.createdAt).toLocaleDateString()}
                   </span>
                 </div>

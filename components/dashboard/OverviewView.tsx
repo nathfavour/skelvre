@@ -351,7 +351,7 @@ export function OverviewView() {
                     <div className="font-bold text-white">
                       ${g.maxAmountPerInterval} {g.assetSymbol}
                     </div>
-                    <div className="text-[10px] text-zinc-400">
+                    <div className="text-[10px] text-zinc-400" suppressHydrationWarning>
                       Next: {new Date(g.nextChargeAt).toLocaleDateString()}
                     </div>
                   </div>
@@ -427,7 +427,7 @@ export function OverviewView() {
                       onClick={() => openRightSidebar('ledger_audit', entry, 'Settlement Audit Details')}
                       className="hover:bg-zinc-950/80 cursor-pointer transition-colors"
                     >
-                      <td className="py-3 text-zinc-400 tabular-nums">
+                      <td className="py-3 text-zinc-400 tabular-nums" suppressHydrationWarning>
                         {new Date(entry.createdAt).toLocaleTimeString()}
                       </td>
                       <td className="py-3 text-white font-sans font-medium">

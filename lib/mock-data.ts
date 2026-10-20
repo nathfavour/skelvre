@@ -80,7 +80,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
       pricingModel: 'x402 streaming pull grant',
     },
     status: 'active',
-    createdAt: new Date().toISOString(),
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'mer_synthetix_stream',
@@ -95,7 +95,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
       pricingModel: 'Recurring pull grant',
     },
     status: 'active',
-    createdAt: new Date().toISOString(),
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'mer_arweave_archiver',
@@ -110,7 +110,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
       pricingModel: 'Capped storage allowance',
     },
     status: 'active',
-    createdAt: new Date().toISOString(),
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
   {
     id: 'mer_cursor_mcp_hub',
@@ -125,7 +125,7 @@ export const INITIAL_MERCHANTS: Merchant[] = [
       pricingModel: 'x402 per tool invocation',
     },
     status: 'active',
-    createdAt: new Date().toISOString(),
+    createdAt: '2026-01-01T00:00:00.000Z',
   },
 ];
 

@@ -29,6 +29,7 @@ import {
 import { enclave } from './crypto-enclave';
 import { createSiweMessage } from './auth';
 import { db, SyncQueueItem } from './db';
+import { useOnlineStatus } from '@/hooks/use-online';
 
 interface SkelvreContextType {
   // Auth & Identity
@@ -143,35 +144,17 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
   const [isEnclaveLocked, setIsEnclaveLocked] = useState<boolean>(false);
 
   // Connectivity & Sync state
-  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const isOnline = useOnlineStatus();
   const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'offline'>('idle');
 
-  // Track online/offline status
+  // Register service worker on mount
   useEffect(() => {
-    const handleOnline = () => {
-      setIsOnline(true);
-      setSyncStatus('idle');
-    };
-    const handleOffline = () => {
-      setIsOnline(false);
-      setSyncStatus('offline');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    // Register Service Worker for offline shell caching
     if ('serviceWorker' in navigator && process.env.NODE_ENV !== 'development') {
       navigator.serviceWorker.register('/sw.js').catch((err) => {
         console.warn('SW registration info:', err);
       });
     }
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
   }, []);
 
   // Initialize Dexie state on mount

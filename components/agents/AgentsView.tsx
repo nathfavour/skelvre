@@ -224,7 +224,7 @@ export function AgentsView() {
                     msg.role === 'user' ? 'items-end' : 'items-start'
                   }`}
                 >
-                <div className="text-[10px] font-mono text-zinc-500 px-1">
+                <div className="text-[10px] font-mono text-zinc-500 px-1" suppressHydrationWarning>
                   {msg.role === 'user' ? 'You (Client Enclave)' : 'Skelvre MCP Gateway'} ·{' '}
                   {new Date(msg.createdAt).toLocaleTimeString()}
                 </div>
