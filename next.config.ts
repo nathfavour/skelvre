@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  serverExternalPackages: ['@libsql/client'],
   // Allow access to remote image placeholder.
   images: {
     remotePatterns: [

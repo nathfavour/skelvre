@@ -15,7 +15,8 @@ import {
   Shield,
   Plus,
   ChevronRight,
-  ExternalLink,
+  HardDrive,
+  RefreshCw,
 } from 'lucide-react';
 
 export function LeftSidebar() {
@@ -25,7 +26,10 @@ export function LeftSidebar() {
     activeWallet,
     setActiveWalletId,
     openRightSidebar,
-    isEnclaveLocked,
+    isOnline,
+    pendingSyncCount,
+    syncStatus,
+    syncWithEdge,
   } = useSkelvre();
 
   const navItems = [
@@ -123,7 +127,9 @@ export function LeftSidebar() {
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-zinc-500 font-mono mt-1 tabular-nums">
                     <span>{wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}</span>
-                    <span className="text-zinc-300 font-medium">${wallet.balanceUsd.toFixed(2)}</span>
+                    <span className="text-zinc-300 font-medium">
+                      ${(wallet.balanceUsd || 0).toFixed(2)}
+                    </span>
                   </div>
                 </button>
               );
@@ -132,26 +138,32 @@ export function LeftSidebar() {
         </div>
       </div>
 
-      {/* Enclave Security Status */}
-      <div className="mt-auto pt-4 border-t border-white/10 space-y-2">
-        <div className="p-3 rounded-lg bg-black/60 border border-white/10 text-xs font-mono space-y-1.5">
+      {/* Offline First & Enclave Storage Status */}
+      <div className="mt-auto pt-4 border-t border-white/10 space-y-3">
+        <div className="p-3 rounded-lg bg-black/60 border border-white/10 text-xs font-mono space-y-2">
           <div className="flex items-center justify-between text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-violet-400" />
-              <span>Key Custody</span>
+              <HardDrive className="w-3.5 h-3.5 text-violet-400" />
+              <span>Storage</span>
             </span>
-            <span className="text-[10px] text-emerald-400">Client Enclave</span>
+            <span className="text-[10px] text-emerald-400">Dexie (Offline)</span>
           </div>
-          <p className="text-[11px] text-zinc-400 leading-relaxed font-sans">
-            Private entropy never leaves browser memory. Zero server-side custody.
+
+          <div className="flex items-center justify-between text-zinc-400 text-[11px]">
+            <span>Edge Sync</span>
+            <button
+              onClick={syncWithEdge}
+              disabled={syncStatus === 'syncing'}
+              className="text-violet-400 hover:text-violet-300 flex items-center gap-1 disabled:opacity-50"
+            >
+              <span>{pendingSyncCount > 0 ? `${pendingSyncCount} Queued` : 'Optional / Idle'}</span>
+              <RefreshCw className={`w-3 h-3 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          <p className="text-[11px] text-zinc-500 leading-relaxed font-sans pt-1 border-t border-white/5">
+            Private entropy and keys never leave your browser enclave. Sync is strictly optional.
           </p>
-          <button
-            onClick={() => openRightSidebar('guardrail_settings', null, 'Security Guardrail Parameters')}
-            className="w-full mt-2 flex items-center justify-between text-[11px] text-violet-400 hover:text-violet-300 transition-colors pt-1"
-          >
-            <span>Adjust Guardrails</span>
-            <ChevronRight className="w-3 h-3" />
-          </button>
         </div>
       </div>
     </aside>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="128" fill="#161412" />
+  <rect x="24" y="24" width="464" height="464" rx="104" fill="#000000" stroke="#7c3aed" stroke-width="8" stroke-opacity="0.4" />
+  <!-- Violet glow core -->
+  <circle cx="256" cy="256" r="140" fill="#7c3aed" fill-opacity="0.12" />
+  <!-- Geometric Enclave Knot and SK Glyph -->
+  <path d="M160 160 H280 C324 160 340 185 340 215 C340 245 315 260 270 260 L210 260" fill="none" stroke="#a78bfa" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M210 260 L345 352" fill="none" stroke="#7c3aed" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M160 160 V352" fill="none" stroke="#ffffff" stroke-width="28" stroke-linecap="round" />
+  <!-- Circuit node accents -->
+  <circle cx="160" cy="160" r="10" fill="#a78bfa" />
+  <circle cx="160" cy="352" r="10" fill="#ffffff" />
+  <circle cx="345" cy="352" r="10" fill="#7c3aed" />
+</svg>

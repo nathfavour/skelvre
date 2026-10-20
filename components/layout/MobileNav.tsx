@@ -13,6 +13,7 @@ import {
   Terminal,
   Settings,
   Fingerprint,
+  WifiOff,
 } from 'lucide-react';
 
 export function MobileNav() {
@@ -23,6 +24,8 @@ export function MobileNav() {
     activeSignRequest,
     approveActiveSignRequest,
     rejectActiveSignRequest,
+    isOnline,
+    pendingSyncCount,
   } = useSkelvre();
 
   const navLinks = [
@@ -46,11 +49,11 @@ export function MobileNav() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-[10px] font-medium transition-colors ${
-                isActive ? 'text-violet-400' : 'text-zinc-400 hover:text-zinc-200'
+                isActive ? 'text-violet-400 font-semibold' : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
               <div
-                className={`p-1 rounded-md transition-all ${
+                className={`p-1.5 rounded-lg transition-all ${
                   isActive ? 'bg-violet-950/70 border border-violet-500/40 text-violet-300' : ''
                 }`}
               >
@@ -61,6 +64,14 @@ export function MobileNav() {
           );
         })}
       </nav>
+
+      {/* Floating Offline Badge for Mobile */}
+      {!isOnline && (
+        <div className="fixed bottom-20 left-4 z-40 lg:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-950/90 border border-amber-500/40 text-[11px] font-mono text-amber-300 shadow-lg backdrop-blur-md">
+          <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+          <span>Offline First · Local Enclave</span>
+        </div>
+      )}
 
       {/* 2. MOBILE BOTTOM DRAWER (Pulls up to full height 85-100dvh for signing & interactions) */}
       {mobileDrawer.isOpen && (

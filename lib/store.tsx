@@ -27,7 +27,8 @@ import {
   SUPPORTED_CHAINS,
 } from './mock-data';
 import { enclave } from './crypto-enclave';
-import { createSiweMessage, createSiwsMessage } from './auth';
+import { createSiweMessage } from './auth';
+import { db, SyncQueueItem } from './db';
 
 interface SkelvreContextType {
   // Auth & Identity
@@ -36,16 +37,16 @@ interface SkelvreContextType {
   setAuthenticated: (auth: boolean) => void;
   signInWithEthereum: () => Promise<void>;
   signInWithSolana: () => Promise<void>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 
-  // Wallets
+  // Wallets (Offline-First Dexie)
   wallets: Wallet[];
   activeWallet: Wallet | null;
   setActiveWalletId: (id: string) => void;
   addWallet: (wallet: Omit<Wallet, 'id' | 'createdAt' | 'balanceUsd' | 'nativeBalance'>) => Promise<Wallet>;
-  updateWalletConfig: (walletId: string, config: Wallet['config']) => void;
+  updateWalletConfig: (walletId: string, config: Wallet['config']) => Promise<void>;
 
-  // Merchants & Subscriptions
+  // Merchants & Subscriptions (Offline-First Dexie)
   merchants: Merchant[];
   registerMerchant: (merchant: Omit<Merchant, 'id' | 'createdAt' | 'status'>) => Promise<Merchant>;
   grants: SubscriptionGrant[];
@@ -61,7 +62,7 @@ interface SkelvreContextType {
   revokeSubscriptionGrant: (grantId: string) => Promise<void>;
   simulateSubscriptionPull: (grantId: string) => Promise<void>;
 
-  // Agents & MCP
+  // Agents & MCP (Offline-First Dexie)
   agentSessions: AgentSession[];
   createAgentSession: (data: {
     name: string;
@@ -71,7 +72,7 @@ interface SkelvreContextType {
     spendingLimitUsd: number;
     expiresInDays: number;
   }) => Promise<{ session: AgentSession; secretToken: string }>;
-  revokeAgentSession: (sessionId: string) => void;
+  revokeAgentSession: (sessionId: string) => Promise<void>;
 
   // Chat & Rolling Context
   chatSessions: AgentChatSession[];
@@ -80,15 +81,23 @@ interface SkelvreContextType {
   activeChatSession: AgentChatSession | undefined;
   sendMessageToAgent: (content: string) => Promise<void>;
 
-  // Settlement & Guardrails
+  // Settlement Ledger & Guardrails
   ledger: SettlementLedgerEntry[];
   guardrails: SecurityGuardrails;
-  updateGuardrails: (newGuardrails: Partial<SecurityGuardrails>) => void;
+  updateGuardrails: (newGuardrails: Partial<SecurityGuardrails>) => Promise<void>;
 
   // Enclave Security
   isEnclaveLocked: boolean;
   lockEnclave: () => void;
   unlockEnclave: () => boolean;
+
+  // Offline-First & Sync Control
+  isOnline: boolean;
+  isDbReady: boolean;
+  pendingSyncCount: number;
+  syncStatus: 'idle' | 'syncing' | 'synced' | 'offline';
+  syncWithEdge: () => Promise<void>;
+  resetLocalDatabase: () => Promise<void>;
 
   // Zero-Modal Navigation State
   rightSidebar: {
@@ -119,95 +128,133 @@ interface SkelvreContextType {
 const SkelvreContext = createContext<SkelvreContextType | null>(null);
 
 export function SkelvreProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved) return JSON.parse(saved).user || null;
-      } catch {}
-    }
-    return INITIAL_USER;
-  });
-
-  const [isAuthenticated, setAuthenticated] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved) return !!JSON.parse(saved).user;
-      } catch {}
-    }
-    return false;
-  });
-
-  const [wallets, setWallets] = useState<Wallet[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved) return JSON.parse(saved).wallets || [];
-      } catch {}
-    }
-    return INITIAL_WALLETS;
-  });
-
-  const [activeWalletId, setActiveWalletId] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved && JSON.parse(saved).wallets?.length > 0) return JSON.parse(saved).wallets[0].id;
-      } catch {}
-    }
-    return '';
-  });
-
+  const [isDbReady, setIsDbReady] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthenticated, setAuthenticated] = useState<boolean>(false);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [activeWalletId, setActiveWalletId] = useState<string>('');
   const [merchants, setMerchants] = useState<Merchant[]>(INITIAL_MERCHANTS);
-  const [grants, setGrants] = useState<SubscriptionGrant[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved) return JSON.parse(saved).grants || [];
-      } catch {}
-    }
-    return INITIAL_GRANTS;
-  });
-
-  const [agentSessions, setAgentSessions] = useState<AgentSession[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved) return JSON.parse(saved).agentSessions || [];
-      } catch {}
-    }
-    return INITIAL_AGENT_SESSIONS;
-  });
-
-  const [chatSessions, setChatSessions] = useState<AgentChatSession[]>(INITIAL_CHAT_SESSIONS);
+  const [grants, setGrants] = useState<SubscriptionGrant[]>([]);
+  const [agentSessions, setAgentSessions] = useState<AgentSession[]>([]);
+  const [chatSessions, setChatSessions] = useState<AgentChatSession[]>([]);
   const [activeChatId, setActiveChatId] = useState<string>('');
-
-  const [ledger, setLedger] = useState<SettlementLedgerEntry[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('skelvre_auth_v1');
-        if (saved) return JSON.parse(saved).ledger || [];
-      } catch {}
-    }
-    return INITIAL_LEDGER;
-  });
+  const [ledger, setLedger] = useState<SettlementLedgerEntry[]>([]);
   const [guardrails, setGuardrails] = useState<SecurityGuardrails>(INITIAL_GUARDRAILS);
   const [isEnclaveLocked, setIsEnclaveLocked] = useState<boolean>(false);
 
-  // Save to localStorage whenever auth or wallets change
-  const persistState = useCallback((u: User | null, w: Wallet[], g: SubscriptionGrant[], a: AgentSession[], l: SettlementLedgerEntry[]) => {
-    try {
-      localStorage.setItem('skelvre_auth_v1', JSON.stringify({
-        user: u,
-        wallets: w,
-        grants: g,
-        agentSessions: a,
-        ledger: l,
-      }));
-    } catch (e) {
-      console.warn('Storage persist note:', e);
+  // Connectivity & Sync state
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'offline'>('idle');
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      setSyncStatus('idle');
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setSyncStatus('offline');
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Register Service Worker for offline shell caching
+    if ('serviceWorker' in navigator && process.env.NODE_ENV !== 'development') {
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.warn('SW registration info:', err);
+      });
     }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Initialize Dexie state on mount
+  useEffect(() => {
+    let mounted = true;
+
+    async function initFromDexie() {
+      try {
+        await db.seedIfEmpty();
+
+        const [
+          savedUsers,
+          savedWallets,
+          savedMerchants,
+          savedGrants,
+          savedSessions,
+          savedChats,
+          savedLedger,
+          savedGuardrails,
+          pendingSync,
+        ] = await Promise.all([
+          db.users.toArray(),
+          db.wallets.toArray(),
+          db.merchants.toArray(),
+          db.grants.toArray(),
+          db.agentSessions.toArray(),
+          db.chatSessions.toArray(),
+          db.ledger.reverse().toArray(),
+          db.guardrails.get('default'),
+          db.syncQueue.where('status').equals('pending').count(),
+        ]);
+
+        if (!mounted) return;
+
+        if (savedUsers.length > 0) {
+          setCurrentUser(savedUsers[0]);
+          setAuthenticated(true);
+        }
+
+        if (savedWallets.length > 0) {
+          setWallets(savedWallets);
+          const primary = savedWallets.find((w) => w.isPrimary) || savedWallets[0];
+          setActiveWalletId(primary.id);
+        }
+
+        if (savedMerchants.length > 0) {
+          setMerchants(savedMerchants);
+        }
+
+        if (savedGrants.length > 0) {
+          setGrants(savedGrants);
+        }
+
+        if (savedSessions.length > 0) {
+          setAgentSessions(savedSessions);
+        }
+
+        if (savedChats.length > 0) {
+          setChatSessions(savedChats);
+          setActiveChatId(savedChats[0].id);
+        }
+
+        if (savedLedger.length > 0) {
+          setLedger(savedLedger);
+        }
+
+        if (savedGuardrails) {
+          setGuardrails(savedGuardrails);
+        }
+
+        setPendingSyncCount(pendingSync);
+        setIsDbReady(true);
+      } catch (err) {
+        console.warn('Dexie DB initialization fallback note:', err);
+        setIsDbReady(true);
+      }
+    }
+
+    initFromDexie();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Zero-Modal Lateral Sidebars & Mobile Drawers
@@ -312,7 +359,7 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     closeMobileDrawer();
   }, [activeSignRequest, closeRightSidebar, closeMobileDrawer]);
 
-  // Real SIWE Authentication Flow
+  // Real SIWE Authentication Flow (Offline First + Dexie)
   const signInWithEthereum = async () => {
     let targetAddress = '';
 
@@ -333,11 +380,11 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
           }
         }
       } catch (e) {
-        console.warn('Ethereum provider interaction note:', e);
+        console.warn('Ethereum provider note:', e);
       }
     }
 
-    // Fallback: WebCrypto Enclave key derivation if no browser extension
+    // Fallback: WebCrypto Enclave key derivation if no browser extension (works 100% offline)
     if (!targetAddress) {
       const entropy = new Uint8Array(20);
       crypto.getRandomValues(entropy);
@@ -366,16 +413,22 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     };
 
+    // Save directly to Dexie IndexedDB first (Offline First Principle)
+    await db.users.put(newUser);
+    await db.wallets.put(newPrimaryWallet);
+    await db.queueSync('users', 'insert', newUser.id, newUser);
+    await db.queueSync('wallets', 'insert', newPrimaryWallet.id, newPrimaryWallet);
+
     const updatedWallets = [newPrimaryWallet];
     setCurrentUser(newUser);
     setWallets(updatedWallets);
     setActiveWalletId(newPrimaryWallet.id);
     setAuthenticated(true);
-    persistState(newUser, updatedWallets, grants, agentSessions, ledger);
+    setPendingSyncCount((prev) => prev + 2);
 
-    // Call server Better Auth route
-    try {
-      await fetch('/api/auth/siwe', {
+    // Optional background sync to Better Auth / Turso if online
+    if (isOnline) {
+      fetch('/api/auth/siwe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -383,13 +436,13 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
           signature: '0x_enclave_attested',
           message: 'SIWE Authentication',
         }),
+      }).catch(() => {
+        // Safe offline resilience
       });
-    } catch {
-      // offline resilience
     }
   };
 
-  // Real SIWS Authentication Flow
+  // Real SIWS Authentication Flow (Offline First + Dexie)
   const signInWithSolana = async () => {
     let targetAddress = '';
 
@@ -432,28 +485,33 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     };
 
+    await db.users.put(newUser);
+    await db.wallets.put(newPrimaryWallet);
+    await db.queueSync('users', 'insert', newUser.id, newUser);
+    await db.queueSync('wallets', 'insert', newPrimaryWallet.id, newPrimaryWallet);
+
     const updatedWallets = [newPrimaryWallet];
     setCurrentUser(newUser);
     setWallets(updatedWallets);
     setActiveWalletId(newPrimaryWallet.id);
     setAuthenticated(true);
-    persistState(newUser, updatedWallets, grants, agentSessions, ledger);
+    setPendingSyncCount((prev) => prev + 2);
 
-    try {
-      await fetch('/api/auth/siws', {
+    if (isOnline) {
+      fetch('/api/auth/siws', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           address: targetAddress,
           signature: 'ed25519_enclave_attested',
         }),
+      }).catch(() => {
+        // Safe offline resilience
       });
-    } catch {
-      // offline resilience
     }
   };
 
-  const signOut = () => {
+  const signOut = async () => {
     setAuthenticated(false);
     setCurrentUser(null);
     setWallets([]);
@@ -462,9 +520,15 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     setAgentSessions([]);
     setLedger([]);
     try {
-      localStorage.removeItem('skelvre_auth_v1');
-    } catch {
-      // clean
+      await db.users.clear();
+      await db.wallets.clear();
+      await db.grants.clear();
+      await db.agentSessions.clear();
+      await db.ledger.clear();
+      await db.syncQueue.clear();
+      setPendingSyncCount(0);
+    } catch (e) {
+      console.warn('Sign out clear note:', e);
     }
   };
 
@@ -480,7 +544,7 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     return success;
   };
 
-  // Wallet Management
+  // Wallet Management (IndexedDB)
   const addWallet = async (data: Omit<Wallet, 'id' | 'createdAt' | 'balanceUsd' | 'nativeBalance'>): Promise<Wallet> => {
     const newWallet: Wallet = {
       ...data,
@@ -489,20 +553,31 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       nativeBalance: data.chainCaip.startsWith('solana') ? '0.00 SOL' : '0.00 ETH',
       createdAt: new Date().toISOString(),
     };
+
+    await db.wallets.put(newWallet);
+    await db.queueSync('wallets', 'insert', newWallet.id, newWallet);
+
     const updated = [...wallets, newWallet];
     setWallets(updated);
     if (!activeWalletId) setActiveWalletId(newWallet.id);
-    persistState(currentUser, updated, grants, agentSessions, ledger);
+    setPendingSyncCount((prev) => prev + 1);
     return newWallet;
   };
 
-  const updateWalletConfig = (walletId: string, config: Wallet['config']) => {
-    const updated = wallets.map((w) => (w.id === walletId ? { ...w, config: { ...w.config, ...config } } : w));
+  const updateWalletConfig = async (walletId: string, config: Wallet['config']) => {
+    const target = wallets.find((w) => w.id === walletId);
+    if (!target) return;
+
+    const updatedTarget: Wallet = { ...target, config: { ...target.config, ...config } };
+    await db.wallets.put(updatedTarget);
+    await db.queueSync('wallets', 'update', walletId, config);
+
+    const updated = wallets.map((w) => (w.id === walletId ? updatedTarget : w));
     setWallets(updated);
-    persistState(currentUser, updated, grants, agentSessions, ledger);
+    setPendingSyncCount((prev) => prev + 1);
   };
 
-  // Merchant Registration
+  // Merchant Registration (IndexedDB)
   const registerMerchant = async (data: Omit<Merchant, 'id' | 'createdAt' | 'status'>): Promise<Merchant> => {
     const newMerchant: Merchant = {
       ...data,
@@ -510,11 +585,16 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       status: 'active',
       createdAt: new Date().toISOString(),
     };
+
+    await db.merchants.put(newMerchant);
+    await db.queueSync('merchants', 'insert', newMerchant.id, newMerchant);
+
     setMerchants((prev) => [newMerchant, ...prev]);
+    setPendingSyncCount((prev) => prev + 1);
     return newMerchant;
   };
 
-  // Subscription Grants
+  // Subscription Grants (IndexedDB)
   const createSubscriptionGrant = async (data: {
     merchantId: string;
     walletId: string;
@@ -577,9 +657,12 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
             createdAt: new Date().toISOString(),
           };
 
+          await db.grants.put(newGrant);
+          await db.queueSync('grants', 'insert', newGrant.id, newGrant);
+
           const updatedGrants = [newGrant, ...grants];
           setGrants(updatedGrants);
-          persistState(currentUser, wallets, updatedGrants, agentSessions, ledger);
+          setPendingSyncCount((prev) => prev + 1);
           resolve();
         },
         onReject: () => {
@@ -593,7 +676,11 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     const grant = grants.find((g) => g.id === grantId);
     if (!grant || !activeWallet) return;
 
-    const updatedGrants = grants.map((g) => (g.id === grantId ? { ...g, status: 'revoked' as const } : g));
+    const updatedGrant: SubscriptionGrant = { ...grant, status: 'revoked' as const };
+    await db.grants.put(updatedGrant);
+    await db.queueSync('grants', 'update', grantId, { status: 'revoked' });
+
+    const updatedGrants = grants.map((g) => (g.id === grantId ? updatedGrant : g));
     setGrants(updatedGrants);
 
     const randomTx = '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
@@ -617,9 +704,13 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       },
       createdAt: new Date().toISOString(),
     };
+
+    await db.ledger.put(ledgerEntry);
+    await db.queueSync('ledger', 'insert', ledgerEntry.id, ledgerEntry);
+
     const updatedLedger = [ledgerEntry, ...ledger];
     setLedger(updatedLedger);
-    persistState(currentUser, wallets, updatedGrants, agentSessions, updatedLedger);
+    setPendingSyncCount((prev) => prev + 2);
   };
 
   const simulateSubscriptionPull = async (grantId: string) => {
@@ -648,9 +739,13 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
         },
         createdAt: new Date().toISOString(),
       };
+
+      await db.ledger.put(blockedEntry);
+      await db.queueSync('ledger', 'insert', blockedEntry.id, blockedEntry);
+
       const updatedLedger = [blockedEntry, ...ledger];
       setLedger(updatedLedger);
-      persistState(currentUser, wallets, grants, agentSessions, updatedLedger);
+      setPendingSyncCount((prev) => prev + 1);
       return;
     }
 
@@ -679,27 +774,30 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       status: 'success',
       metadata: {
         reason: 'Automated pull execution verified against on-chain grant',
-        executionLatencyMs: 310,
+        executionLatencyMs: 240,
       },
       createdAt: new Date().toISOString(),
     };
 
+    const updatedGrant: SubscriptionGrant = {
+      ...grant,
+      nextChargeAt: new Date(Date.now() + grant.billingIntervalSeconds * 1000).toISOString(),
+    };
+
+    await db.ledger.put(newLedgerEntry);
+    await db.grants.put(updatedGrant);
+    await db.queueSync('ledger', 'insert', newLedgerEntry.id, newLedgerEntry);
+    await db.queueSync('grants', 'update', updatedGrant.id, updatedGrant);
+
     const updatedLedger = [newLedgerEntry, ...ledger];
     setLedger(updatedLedger);
 
-    const updatedGrants = grants.map((g) =>
-      g.id === grantId
-        ? {
-            ...g,
-            nextChargeAt: new Date(Date.now() + g.billingIntervalSeconds * 1000).toISOString(),
-          }
-        : g
-    );
+    const updatedGrants = grants.map((g) => (g.id === grantId ? updatedGrant : g));
     setGrants(updatedGrants);
-    persistState(currentUser, wallets, updatedGrants, agentSessions, updatedLedger);
+    setPendingSyncCount((prev) => prev + 2);
   };
 
-  // Agent Sessions
+  // Agent Sessions (IndexedDB)
   const createAgentSession = async (data: {
     name: string;
     walletId: string;
@@ -726,16 +824,21 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     };
 
+    await db.agentSessions.put(newSession);
+    await db.queueSync('agentSessions', 'insert', newSession.id, newSession);
+
     const updatedSessions = [newSession, ...agentSessions];
     setAgentSessions(updatedSessions);
-    persistState(currentUser, wallets, grants, updatedSessions, ledger);
+    setPendingSyncCount((prev) => prev + 1);
     return { session: newSession, secretToken: secret };
   };
 
-  const revokeAgentSession = (sessionId: string) => {
+  const revokeAgentSession = async (sessionId: string) => {
+    await db.agentSessions.delete(sessionId);
+    await db.queueSync('agentSessions', 'delete', sessionId, {});
     const updated = agentSessions.filter((s) => s.id !== sessionId);
     setAgentSessions(updated);
-    persistState(currentUser, wallets, grants, updated, ledger);
+    setPendingSyncCount((prev) => prev + 1);
   };
 
   // Agent Chat Execution & MCP
@@ -754,10 +857,10 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     };
 
     const existingChat = chatSessions.find((c) => c.id === currentChatId);
-    let updatedChats: AgentChatSession[];
+    let updatedChat: AgentChatSession;
 
     if (!existingChat) {
-      const newChat: AgentChatSession = {
+      updatedChat = {
         id: currentChatId,
         userId: currentUser?.id || 'usr_anonymous',
         walletId: activeWallet?.id,
@@ -768,99 +871,158 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      updatedChats = [newChat, ...chatSessions];
+      setChatSessions((prev) => [updatedChat, ...prev]);
     } else {
-      updatedChats = chatSessions.map((cs) =>
-        cs.id === currentChatId
-          ? {
-              ...cs,
-              messages: [...cs.messages, userMsg],
-              updatedAt: new Date().toISOString(),
-            }
-          : cs
-      );
+      updatedChat = {
+        ...existingChat,
+        messages: [...existingChat.messages, userMsg],
+        updatedAt: new Date().toISOString(),
+      };
+      setChatSessions((prev) => prev.map((cs) => (cs.id === currentChatId ? updatedChat : cs)));
     }
-    setChatSessions(updatedChats);
+
+    await db.chatSessions.put(updatedChat);
 
     try {
-      const response = await fetch('/api/gateway/agent', {
+      if (isOnline) {
+        const response = await fetch('/api/gateway/agent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: content,
+            chatSessionId: currentChatId,
+            activeWallet: activeWallet
+              ? {
+                  id: activeWallet.id,
+                  address: activeWallet.address,
+                  chainCaip: activeWallet.chainCaip,
+                  balanceUsd: activeWallet.balanceUsd,
+                }
+              : null,
+            grants: grants.map((g) => ({
+              id: g.id,
+              merchantName: g.merchantName,
+              maxAmount: g.maxAmountPerInterval,
+              status: g.status,
+            })),
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const assistantMsg: AgentChatMessage = {
+            id: `msg_${Date.now()}_a`,
+            chatSessionId: currentChatId,
+            role: 'assistant',
+            content: data.text || 'Action analyzed and executed via Skelvre Gateway.',
+            toolCalls: data.toolCalls,
+            createdAt: new Date().toISOString(),
+          };
+
+          if (data.settlement) {
+            await db.ledger.put(data.settlement);
+            setLedger((prev) => [data.settlement, ...prev]);
+          }
+
+          const finalChat: AgentChatSession = {
+            ...updatedChat,
+            messages: [...updatedChat.messages, assistantMsg],
+            rollingContext: data.rollingContext || updatedChat.rollingContext,
+            updatedAt: new Date().toISOString(),
+          };
+
+          await db.chatSessions.put(finalChat);
+          setChatSessions((prev) => prev.map((cs) => (cs.id === currentChatId ? finalChat : cs)));
+          return;
+        }
+      }
+    } catch {
+      // offline fallback
+    }
+
+    // Offline Autonomous Agent Emulation
+    const offlineMsg: AgentChatMessage = {
+      id: `msg_${Date.now()}_a`,
+      chatSessionId: currentChatId,
+      role: 'assistant',
+      content: activeWallet
+        ? `[Offline Enclave Ready] Evaluated prompt for ${activeWallet.label} (${activeWallet.chainCaip}). Local WebCrypto cryptographic boundaries and Dexie stores are active. All operations persist to your device IndexedDB.`
+        : 'Please connect a SIWE or SIWS identity. Offline-first local storage is ready.',
+      createdAt: new Date().toISOString(),
+    };
+
+    const finalChat: AgentChatSession = {
+      ...updatedChat,
+      messages: [...updatedChat.messages, offlineMsg],
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.chatSessions.put(finalChat);
+    setChatSessions((prev) => prev.map((cs) => (cs.id === currentChatId ? finalChat : cs)));
+  };
+
+  const updateGuardrails = async (newGuardrails: Partial<SecurityGuardrails>) => {
+    const updated: SecurityGuardrails & { id: string } = {
+      id: 'default',
+      ...guardrails,
+      ...newGuardrails,
+    };
+    await db.guardrails.put(updated);
+    setGuardrails(updated);
+  };
+
+  // Optional Edge Sync (Turso / libSQL)
+  const syncWithEdge = async () => {
+    if (!isOnline) {
+      setSyncStatus('offline');
+      return;
+    }
+
+    setSyncStatus('syncing');
+
+    try {
+      const pendingItems = await db.syncQueue.where('status').equals('pending').toArray();
+
+      if (pendingItems.length === 0) {
+        setSyncStatus('synced');
+        setTimeout(() => setSyncStatus('idle'), 3000);
+        return;
+      }
+
+      // Send queued mutations to server sync endpoint
+      const response = await fetch('/api/turso/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: content,
-          chatSessionId: currentChatId,
-          activeWallet: activeWallet
-            ? {
-                id: activeWallet.id,
-                address: activeWallet.address,
-                chainCaip: activeWallet.chainCaip,
-                balanceUsd: activeWallet.balanceUsd,
-              }
-            : null,
-          grants: grants.map((g) => ({
-            id: g.id,
-            merchantName: g.merchantName,
-            maxAmount: g.maxAmountPerInterval,
-            status: g.status,
-          })),
-        }),
+        body: JSON.stringify({ mutations: pendingItems }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        const assistantMsg: AgentChatMessage = {
-          id: `msg_${Date.now()}_a`,
-          chatSessionId: currentChatId,
-          role: 'assistant',
-          content: data.text || 'Action analyzed and executed via Skelvre Gateway.',
-          toolCalls: data.toolCalls,
-          createdAt: new Date().toISOString(),
-        };
-
-        if (data.settlement) {
-          const updatedLedger = [data.settlement, ...ledger];
-          setLedger(updatedLedger);
-          persistState(currentUser, wallets, grants, agentSessions, updatedLedger);
-        }
-
-        setChatSessions((prev) =>
-          prev.map((cs) =>
-            cs.id === currentChatId
-              ? {
-                  ...cs,
-                  messages: [...cs.messages, assistantMsg],
-                  rollingContext: data.rollingContext || cs.rollingContext,
-                  updatedAt: new Date().toISOString(),
-                }
-              : cs
+        // Mark all items as synced
+        await Promise.all(
+          pendingItems.map((item) =>
+            db.syncQueue.update(item.id!, {
+              status: 'synced',
+              syncedAt: new Date().toISOString(),
+            })
           )
         );
+        const remaining = await db.syncQueue.where('status').equals('pending').count();
+        setPendingSyncCount(remaining);
+        setSyncStatus('synced');
+        setTimeout(() => setSyncStatus('idle'), 3000);
+      } else {
+        setSyncStatus('idle');
       }
-    } catch {
-      // Clean fallback if offline
-      setTimeout(() => {
-        const fallbackMsg: AgentChatMessage = {
-          id: `msg_${Date.now()}_a`,
-          chatSessionId: currentChatId,
-          role: 'assistant',
-          content: activeWallet
-            ? `Skelvre Gateway ready for address ${activeWallet.address.slice(0, 6)}...${activeWallet.address.slice(-4)}. Enclave is active.`
-            : 'Please connect a wallet via SIWE or SIWS to authorize autonomous payment tools.',
-          createdAt: new Date().toISOString(),
-        };
-        setChatSessions((prev) =>
-          prev.map((cs) =>
-            cs.id === currentChatId
-              ? { ...cs, messages: [...cs.messages, fallbackMsg], updatedAt: new Date().toISOString() }
-              : cs
-          )
-        );
-      }, 300);
+    } catch (e) {
+      console.warn('Sync attempt note:', e);
+      setSyncStatus('idle');
     }
   };
 
-  const updateGuardrails = (newGuardrails: Partial<SecurityGuardrails>) => {
-    setGuardrails((prev) => ({ ...prev, ...newGuardrails }));
+  // Reset local database completely
+  const resetLocalDatabase = async () => {
+    await db.delete();
+    window.location.reload();
   };
 
   return (
@@ -897,6 +1059,12 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
         isEnclaveLocked,
         lockEnclave,
         unlockEnclave,
+        isOnline,
+        isDbReady,
+        pendingSyncCount,
+        syncStatus,
+        syncWithEdge,
+        resetLocalDatabase,
         rightSidebar,
         openRightSidebar,
         closeRightSidebar,

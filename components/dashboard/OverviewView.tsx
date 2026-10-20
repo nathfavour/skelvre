@@ -15,6 +15,10 @@ import {
   ShieldCheck,
   Plus,
   KeyRound,
+  HardDrive,
+  RefreshCw,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 
 export function OverviewView() {
@@ -27,11 +31,15 @@ export function OverviewView() {
     openRightSidebar,
     signInWithEthereum,
     signInWithSolana,
+    isOnline,
+    pendingSyncCount,
+    syncStatus,
+    syncWithEdge,
   } = useSkelvre();
 
   const [filterLedger, setFilterLedger] = useState<'all' | 'success' | 'blocked'>('all');
 
-  // Compute key totals from real active user data
+  // Compute key totals from real active user data (zero fake figures)
   const totalBalanceUsd = wallets.reduce((acc, w) => acc + (w.balanceUsd || 0), 0);
   const activeGrants = grants.filter((g) => g.status === 'active');
   const monthlyBurnUsd = activeGrants.reduce(
@@ -53,10 +61,12 @@ export function OverviewView() {
       {/* 1. HERO / COMMAND CENTER HEADER */}
       <div className="relative rounded-2xl bg-black border border-white/15 p-6 sm:p-8 overflow-hidden">
         <div className="relative z-10 max-w-2xl space-y-4">
-          <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-400 font-mono">
             <span>Skelvre Multi-Chain Gateway</span>
             <span aria-hidden="true">·</span>
-            <span className="text-emerald-400">Turso Edge Ready</span>
+            <span className="text-emerald-400">Offline First (Dexie)</span>
+            <span aria-hidden="true">·</span>
+            <span>Optional Edge Sync</span>
             <span aria-hidden="true">·</span>
             <span>Zero-Modal Architecture</span>
           </div>
@@ -66,7 +76,7 @@ export function OverviewView() {
           </h1>
 
           <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-            Programmable recurring billing and x402 micro-settlements across EVM and Solana. Client-side WebCrypto enclaves ensure private entropy never leaves your browser.
+            Programmable recurring billing and x402 micro-settlements across EVM and Solana. Runs fundamentally offline in local IndexedDB — edge sync to Turso is purely optional.
           </p>
 
           <div className="pt-2 flex flex-wrap items-center gap-3">
@@ -129,7 +139,7 @@ export function OverviewView() {
         </div>
       </div>
 
-      {/* 2. STATS & REVENUE METRICS ROW */}
+      {/* 2. STATS & REVENUE METRICS ROW (Strictly Real Active Figures) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Metric 1 */}
         <div className="p-5 rounded-xl bg-black border border-white/15 space-y-2">
@@ -140,7 +150,7 @@ export function OverviewView() {
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             ${totalBalanceUsd.toFixed(2)}
           </div>
-          <div className="text-xs text-zinc-400 font-mono">
+          <div className="text-xs text-zinc-500 font-mono">
             Across {wallets.length} active derivation paths
           </div>
         </div>
@@ -154,7 +164,7 @@ export function OverviewView() {
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             ${monthlyBurnUsd.toFixed(2)}
           </div>
-          <div className="text-xs text-zinc-400 font-mono">
+          <div className="text-xs text-zinc-500 font-mono">
             {activeGrants.length} active EIP-712 recurring grants
           </div>
         </div>
@@ -168,7 +178,7 @@ export function OverviewView() {
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             {agentSessions.length} Active
           </div>
-          <div className="text-xs text-zinc-400 font-mono">
+          <div className="text-xs text-zinc-500 font-mono">
             MCP, WebMCP, CLI & Telegram bots
           </div>
         </div>
@@ -182,13 +192,49 @@ export function OverviewView() {
           <div className="text-2xl font-bold font-mono tracking-tight text-white tabular-nums">
             ${totalSettledUsd.toFixed(2)}
           </div>
-          <div className="text-xs text-zinc-400 font-mono">
+          <div className="text-xs text-zinc-500 font-mono">
             {ledger.length} immutable ledger events
           </div>
         </div>
       </div>
 
-      {/* 3. MULTI-CHAIN WALLETS & ACTIVE RECURRING PULLS */}
+      {/* 3. OFFLINE-FIRST ARCHITECTURE BANNER */}
+      <div className="p-4 rounded-xl bg-black border border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-violet-950/60 border border-violet-500/40 text-violet-400">
+            <HardDrive className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white flex items-center gap-2">
+              <span>Offline-First Architecture Active</span>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                Dexie IndexedDB
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              All keys, grants, agent sessions, and ledgers are fundamentally stored in browser storage. Syncing to Turso edge is completely optional.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-right font-mono text-xs hidden sm:block">
+            <span className="text-zinc-500">Sync Queue: </span>
+            <span className="text-white font-medium">{pendingSyncCount} mutations</span>
+          </div>
+
+          <button
+            onClick={syncWithEdge}
+            disabled={syncStatus === 'syncing'}
+            className="px-3.5 py-2 text-xs font-mono font-medium text-white bg-black border border-white/15 rounded-lg hover:border-violet-500/60 hover:bg-zinc-950 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-violet-400 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+            <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Sync Edge (Optional)'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4. MULTI-CHAIN WALLETS & ACTIVE RECURRING PULLS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Universal Wallets */}
         <div className="p-5 rounded-xl bg-black border border-white/15 space-y-4">
@@ -196,7 +242,7 @@ export function OverviewView() {
             <div>
               <h2 className="text-sm font-semibold text-white">Universal Multi-Chain Wallets</h2>
               <p className="text-xs text-zinc-400 font-mono mt-0.5">
-                CAIP-2 Decoupled Derivations
+                CAIP-2 Decoupled Derivations (IndexedDB)
               </p>
             </div>
             <button
@@ -212,7 +258,7 @@ export function OverviewView() {
             {wallets.length === 0 ? (
               <div className="p-6 rounded-lg bg-zinc-950 border border-white/5 text-center space-y-3">
                 <WalletIcon className="w-6 h-6 text-zinc-600 mx-auto" />
-                <div className="text-xs text-zinc-400">No multi-chain wallets linked yet</div>
+                <div className="text-xs text-zinc-400">No multi-chain wallets derived yet</div>
                 <button
                   onClick={() => openRightSidebar('add_wallet', null, 'Derive New Universal Wallet')}
                   className="px-3 py-1.5 text-xs font-mono text-violet-300 bg-violet-950/60 border border-violet-500/40 rounded-lg hover:bg-violet-900/50 transition-colors"
@@ -316,13 +362,13 @@ export function OverviewView() {
         </div>
       </div>
 
-      {/* 4. SETTLEMENT LEDGER AUDIT TRAIL */}
+      {/* 5. SETTLEMENT LEDGER AUDIT TRAIL */}
       <div className="p-5 rounded-xl bg-black border border-white/15 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-white">Settlement Audit Ledger</h2>
             <p className="text-xs text-zinc-400 font-mono mt-0.5">
-              Immutable on-chain verification entries & guardrail enforcement logs
+              Immutable local verification entries & guardrail enforcement logs (Stored in Dexie)
             </p>
           </div>
 
@@ -357,7 +403,7 @@ export function OverviewView() {
         {filteredLedger.length === 0 ? (
           <div className="py-10 text-center font-mono text-xs text-zinc-500 space-y-1">
             <Activity className="w-5 h-5 mx-auto text-zinc-600" />
-            <div>No settlement transactions recorded yet on edge ledger</div>
+            <div>No settlement transactions recorded yet in local storage</div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -422,18 +468,18 @@ export function OverviewView() {
         )}
       </div>
 
-      {/* 5. ARCHITECTURAL SHOWCASE SECTION */}
+      {/* 6. ARCHITECTURAL SHOWCASE SECTION */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
         <div className="p-6 rounded-xl bg-black border border-white/15 flex flex-col justify-between space-y-4">
           <div className="space-y-3">
             <div className="text-xs font-mono text-violet-400 uppercase tracking-wider">
-              Zero-Custody Architecture
+              Offline-First & Zero-Custody
             </div>
             <h3 className="text-lg font-bold text-white">
-              Private entropy never leaves browser memory
+              Private entropy never leaves browser enclave memory
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Skelvre uses the W3C Web Cryptography API and Passkeys enclave. The Turso database at the edge persists only generic JSON schemas, derivation paths, and EIP-712 structured proofs.
+              Skelvre uses the W3C Web Cryptography API and Dexie IndexedDB. Wallets, pull subscriptions, and agent tokens exist locally first. You can run disconnected indefinitely.
             </p>
           </div>
 
@@ -457,7 +503,7 @@ export function OverviewView() {
               Deterministic tool authorization for AI models
             </h3>
             <p className="text-xs text-zinc-400 leading-relaxed">
-              Connect Cursor, Claude Desktop, autonomous LangChain or custom Python agents. Agents execute micro-payments with verified SHA-256 session tokens and automated guardrail bounds.
+              Connect Cursor, Claude Desktop, or autonomous daemons. Agents execute micro-payments with verified SHA-256 session tokens and automated guardrail bounds.
             </p>
           </div>
 

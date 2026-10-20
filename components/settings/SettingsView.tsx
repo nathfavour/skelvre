@@ -14,6 +14,11 @@ import {
   RotateCcw,
   Sliders,
   Copy,
+  HardDrive,
+  RefreshCw,
+  Trash2,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 
 export function SettingsView() {
@@ -27,6 +32,11 @@ export function SettingsView() {
     signInWithEthereum,
     signInWithSolana,
     activeWallet,
+    isOnline,
+    pendingSyncCount,
+    syncStatus,
+    syncWithEdge,
+    resetLocalDatabase,
   } = useSkelvre();
 
   const [maxTx, setMaxTx] = useState(guardrails.maxSingleTxUsd.toString());
@@ -35,10 +45,11 @@ export function SettingsView() {
   const [requireBiometric, setRequireBiometric] = useState(guardrails.requireBiometricAlways);
   const [blockUnregistered, setBlockUnregistered] = useState(guardrails.blockUnregisteredMerchants);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const handleSaveGuardrails = (e: React.FormEvent) => {
+  const handleSaveGuardrails = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateGuardrails({
+    await updateGuardrails({
       maxSingleTxUsd: parseFloat(maxTx) || 50,
       maxDailyTxUsd: parseFloat(dailyCap) || 300,
       autoLockMinutes: parseInt(autoLock) || 15,
@@ -54,16 +65,116 @@ export function SettingsView() {
       {/* Header */}
       <div className="p-6 rounded-xl bg-black border border-white/15">
         <div className="text-xs font-mono text-zinc-400">
-          <span>Better Auth & Cryptographic Identities</span>
+          <span>Better Auth & Cryptographic Enclave</span>
           <span aria-hidden="true"> · </span>
-          <span>Security Bounds</span>
+          <span>Offline First Foundation</span>
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-white mt-1">
           Settings & Local Security Enclave
         </h1>
         <p className="text-xs text-zinc-400 mt-1 max-w-xl">
-          Manage your decentralized SIWE/SIWS profiles, hardware-backed WebCrypto keys, and execution guardrails.
+          Manage your decentralized SIWE/SIWS profiles, Dexie IndexedDB storage, hardware-backed WebCrypto keys, and execution guardrails.
         </p>
+      </div>
+
+      {/* Offline First & Database Management Panel */}
+      <div className="p-6 rounded-xl bg-black border border-white/15 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-violet-950/60 border border-violet-500/40 text-violet-400">
+              <HardDrive className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-white flex items-center gap-2">
+                <span>Dexie IndexedDB Engine</span>
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30">
+                  Fundamental Offline
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                Database: <code className="text-violet-400">SkelvreOfflineDB_v1</code> · Zero server dependencies required to operate
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={syncWithEdge}
+              disabled={syncStatus === 'syncing' || !isOnline}
+              className="px-3.5 py-2 text-xs font-mono font-medium text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-sm shadow-violet-600/30 flex items-center gap-2 disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${syncStatus === 'syncing' ? 'animate-spin' : ''}`} />
+              <span>{syncStatus === 'syncing' ? 'Syncing...' : 'Sync with Edge'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs pt-2">
+          <div className="p-3 rounded-lg bg-zinc-950 border border-white/10 space-y-1">
+            <div className="text-zinc-500">Connectivity State</div>
+            <div className="flex items-center gap-1.5 text-white font-medium">
+              {isOnline ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                  <span>Online (Edge Accessible)</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span>Offline (Local Mode)</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-zinc-950 border border-white/10 space-y-1">
+            <div className="text-zinc-500">Pending Sync Queue</div>
+            <div className="text-white font-medium">
+              {pendingSyncCount} offline mutations
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-zinc-950 border border-white/10 space-y-1">
+            <div className="text-zinc-500">Storage Target</div>
+            <div className="text-violet-300 font-medium">
+              Client Browser Enclave
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2 flex items-center justify-between border-t border-white/10">
+          <p className="text-xs text-zinc-500">
+            Sync pushes verifiable proofs to the Turso edge database only when explicitly initiated or online.
+          </p>
+
+          {!showResetConfirm ? (
+            <button
+              type="button"
+              onClick={() => setShowResetConfirm(true)}
+              className="text-xs font-mono text-rose-400 hover:text-rose-300 transition-colors"
+            >
+              Reset Local Storage
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-rose-300 font-mono">Wipe all local data?</span>
+              <button
+                type="button"
+                onClick={resetLocalDatabase}
+                className="px-2.5 py-1 text-xs font-mono font-bold text-white bg-rose-600 rounded hover:bg-rose-500"
+              >
+                Yes, Wipe
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="px-2.5 py-1 text-xs font-mono text-zinc-400 hover:text-white"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Identity Cards */}
@@ -249,7 +360,7 @@ export function SettingsView() {
               </span>
             ) : (
               <span className="text-xs font-mono text-zinc-500">
-                Local storage encrypted via AES-GCM
+                Local storage encrypted via WebCrypto AES-GCM
               </span>
             )}
 
