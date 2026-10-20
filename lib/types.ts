@@ -197,6 +197,7 @@ export interface SignRequest {
 
 export type RightSidebarType =
   | 'none'
+  | 'connect'
   | 'sign_request'
   | 'wallet_details'
   | 'add_wallet'

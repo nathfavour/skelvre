@@ -119,6 +119,11 @@ interface SkelvreContextType {
   openMobileDrawer: (type: RightSidebarType, data?: unknown, title?: string) => void;
   closeMobileDrawer: () => void;
 
+  // Dedicated Connect Bottom Drawer
+  isConnectDrawerOpen: boolean;
+  openConnectDrawer: () => void;
+  closeConnectDrawer: () => void;
+
   // Signer Relay
   activeSignRequest: SignRequest | null;
   requestSigning: (request: Omit<SignRequest, 'id' | 'createdAt'>) => void;
@@ -260,6 +265,11 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     isOpen: false,
     type: 'none',
   });
+
+  // Dedicated Connect Bottom Drawer state
+  const [isConnectDrawerOpen, setIsConnectDrawerOpen] = useState(false);
+  const openConnectDrawer = useCallback(() => setIsConnectDrawerOpen(true), []);
+  const closeConnectDrawer = useCallback(() => setIsConnectDrawerOpen(false), []);
 
   // Signer relay queue
   const [signQueue, setSignQueue] = useState<SignRequest[]>([]);
@@ -1054,6 +1064,9 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
         mobileDrawer,
         openMobileDrawer,
         closeMobileDrawer,
+        isConnectDrawerOpen,
+        openConnectDrawer,
+        closeConnectDrawer,
         activeSignRequest,
         requestSigning,
         approveActiveSignRequest,
