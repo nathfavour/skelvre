@@ -15,6 +15,10 @@ import {
   CheckCircle2,
   Lock,
   Unlock,
+  Download,
+  Upload,
+  HardDrive,
+  KeyRound,
 } from 'lucide-react';
 
 export function WalletsView() {
@@ -26,10 +30,39 @@ export function WalletsView() {
     isEnclaveLocked,
     lockEnclave,
     unlockEnclave,
+    exportEnclaveBackup,
+    importEnclaveBackup,
   } = useSkelvre();
 
   const [filterType, setFilterType] = useState<'all' | 'evm' | 'solana'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [backupNotice, setBackupNotice] = useState<string | null>(null);
+
+  const handleExportBackup = async () => {
+    const jsonStr = await exportEnclaveBackup();
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `skelvre-enclave-backup-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setBackupNotice('Exported encrypted enclave backup');
+    setTimeout(() => setBackupNotice(null), 3000);
+  };
+
+  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    const success = await importEnclaveBackup(text);
+    if (success) {
+      setBackupNotice('Enclave backup imported successfully!');
+    } else {
+      setBackupNotice('Failed to restore enclave backup file');
+    }
+    setTimeout(() => setBackupNotice(null), 3000);
+  };
 
   const copyAddress = (addr: string, id: string) => {
     navigator.clipboard.writeText(addr);
@@ -46,6 +79,51 @@ export function WalletsView() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Enclave Backup & Key Portability Banner */}
+      <div className="p-4 rounded-xl bg-black border border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-violet-950/60 border border-violet-500/40 text-violet-400">
+            <KeyRound className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white flex items-center gap-2">
+              <span>Encrypted Enclave Backup & Portability</span>
+              <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 px-2 py-0.5 rounded border border-violet-500/30">
+                AES-GCM Local
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5 font-mono">
+              Export encrypted derivation keys or restore local state without third-party key custodians.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
+          {backupNotice && (
+            <span className="text-emerald-400 text-xs mr-2">{backupNotice}</span>
+          )}
+
+          <button
+            onClick={handleExportBackup}
+            className="px-3 py-1.5 bg-black border border-white/15 rounded-lg text-white hover:border-violet-500/60 transition-colors flex items-center gap-1.5"
+          >
+            <Download className="w-3.5 h-3.5 text-violet-400" />
+            <span>Export Backup</span>
+          </button>
+
+          <label className="px-3 py-1.5 bg-violet-600 rounded-lg text-white hover:bg-violet-500 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm">
+            <Upload className="w-3.5 h-3.5" />
+            <span>Restore Backup</span>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleImportBackup}
+              className="hidden"
+            />
+          </label>
+        </div>
+      </div>
+
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-xl bg-black border border-white/15">
         <div>

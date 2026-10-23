@@ -8,8 +8,9 @@ import {
   AgentChatSession,
   SettlementLedgerEntry,
   SecurityGuardrails,
+  ProjectRoadmapItem,
 } from './types';
-import { INITIAL_MERCHANTS, INITIAL_GUARDRAILS } from './mock-data';
+import { INITIAL_MERCHANTS, INITIAL_GUARDRAILS, INITIAL_ROADMAPS } from './mock-data';
 
 export interface SyncQueueItem {
   id?: number;
@@ -38,6 +39,7 @@ export class SkelvreLocalDatabase extends Dexie {
   chatSessions!: Table<AgentChatSession, string>;
   ledger!: Table<SettlementLedgerEntry, string>;
   guardrails!: Table<SecurityGuardrails & { id: string }, string>;
+  roadmaps!: Table<ProjectRoadmapItem, string>;
   syncQueue!: Table<SyncQueueItem, number>;
   systemMeta!: Table<SystemMetaItem, string>;
 
@@ -56,6 +58,20 @@ export class SkelvreLocalDatabase extends Dexie {
       syncQueue: '++id, table, action, recordId, status, createdAt',
       systemMeta: 'key, updatedAt',
     });
+
+    this.version(2).stores({
+      users: 'id, authMethod, primaryAddress, createdAt',
+      wallets: 'id, userId, chainCaip, address, isPrimary, createdAt',
+      merchants: 'id, ownerUserId, domain, status, createdAt',
+      grants: 'id, userId, walletId, merchantId, status, nextChargeAt, createdAt',
+      agentSessions: 'id, userId, walletId, interfaceType, tokenHash, expiresAt, createdAt',
+      chatSessions: 'id, userId, walletId, interfaceOrigin, status, updatedAt',
+      ledger: 'id, grantId, merchantId, walletId, chainCaip, status, createdAt',
+      guardrails: 'id',
+      roadmaps: 'id, projectId, status, priority, quarter, createdAt',
+      syncQueue: '++id, table, action, recordId, status, createdAt',
+      systemMeta: 'key, updatedAt',
+    });
   }
 
   /**
@@ -65,6 +81,11 @@ export class SkelvreLocalDatabase extends Dexie {
     const merchantCount = await this.merchants.count();
     if (merchantCount === 0) {
       await this.merchants.bulkAdd(INITIAL_MERCHANTS);
+    }
+
+    const roadmapCount = await this.roadmaps.count();
+    if (roadmapCount === 0) {
+      await this.roadmaps.bulkAdd(INITIAL_ROADMAPS);
     }
 
     const guardrailRecord = await this.guardrails.get('default');
