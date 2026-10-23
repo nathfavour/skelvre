@@ -17,6 +17,7 @@ import {
   ChevronRight,
   HardDrive,
   RefreshCw,
+  Map,
 } from 'lucide-react';
 
 export function LeftSidebar() {
@@ -34,6 +35,7 @@ export function LeftSidebar() {
 
   const navItems = [
     { label: 'Overview', href: '/', icon: LayoutDashboard },
+    { label: 'Project Roadmaps', href: '/roadmaps', icon: Map },
     { label: 'Wallets', href: '/wallets', icon: WalletIcon },
     { label: 'Subscriptions', href: '/subscriptions', icon: Repeat },
     { label: 'Agents & MCP', href: '/agents', icon: Bot },

@@ -19,6 +19,8 @@ import {
   RefreshCw,
   Wifi,
   WifiOff,
+  Map,
+  Sparkles,
 } from 'lucide-react';
 
 export function OverviewView() {
@@ -28,6 +30,7 @@ export function OverviewView() {
     grants,
     agentSessions,
     ledger,
+    roadmaps,
     openRightSidebar,
     signInWithEthereum,
     signInWithSolana,
@@ -196,6 +199,34 @@ export function OverviewView() {
             {ledger.length} immutable ledger events
           </div>
         </div>
+      </div>
+
+      {/* 2.5 PROJECT ROADMAPS & CAPABILITY HUB SUMMARY */}
+      <div className="p-5 rounded-xl bg-black border border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-lg bg-violet-950/60 border border-violet-500/40 text-violet-400">
+            <Map className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white flex items-center gap-2">
+              <span>Project Roadmaps & Capability Tracker</span>
+              <span className="text-[10px] font-mono text-violet-300 bg-violet-950/60 px-2 py-0.5 rounded border border-violet-500/30">
+                {roadmaps.filter((r) => r.status === 'completed').length} / {roadmaps.length} Shipped
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400 mt-0.5">
+              Architectural milestones across universal wallets, subscription pull engine, MCP gateway, and x402 merchant platform.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/roadmaps"
+          className="px-4 py-2 text-xs font-mono font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-sm shadow-violet-600/30 flex items-center gap-1.5 shrink-0"
+        >
+          <span>Open Roadmaps Hub</span>
+          <ChevronRight className="w-4 h-4" />
+        </Link>
       </div>
 
       {/* 3. OFFLINE-FIRST ARCHITECTURE BANNER */}

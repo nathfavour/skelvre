@@ -176,6 +176,35 @@ export interface SecurityGuardrails {
   blockUnregisteredMerchants: boolean;
 }
 
+export type ProjectCategory =
+  | 'wallets'
+  | 'subscriptions'
+  | 'agents'
+  | 'developers'
+  | 'offline_sync'
+  | 'security';
+
+export type RoadmapStatus = 'backlog' | 'in_progress' | 'completed';
+
+export type RoadmapPriority = 'critical' | 'high' | 'medium' | 'low';
+
+export interface ProjectRoadmapItem {
+  id: string;
+  projectId: ProjectCategory;
+  projectName: string;
+  title: string;
+  description: string;
+  status: RoadmapStatus;
+  priority: RoadmapPriority;
+  quarter: string;
+  progressPercent: number;
+  targetCapabilities: string[];
+  actionPath?: string;
+  actionLabel?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface SignRequest {
   id: string;
   type: 'x402_payment' | 'subscription_grant' | 'contract_execution' | 'wallet_message';
@@ -207,4 +236,5 @@ export type RightSidebarType =
   | 'create_agent_session'
   | 'agent_context_inspector'
   | 'guardrail_settings'
-  | 'ledger_audit';
+  | 'ledger_audit'
+  | 'create_roadmap_item';

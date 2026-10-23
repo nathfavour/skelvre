@@ -14,6 +14,9 @@ import {
   RightSidebarType,
   SignRequest,
   ChainCAIP,
+  ProjectRoadmapItem,
+  RoadmapStatus,
+  ProjectCategory,
 } from './types';
 import {
   INITIAL_USER,
@@ -24,6 +27,7 @@ import {
   INITIAL_LEDGER,
   INITIAL_GUARDRAILS,
   INITIAL_CHAT_SESSIONS,
+  INITIAL_ROADMAPS,
   SUPPORTED_CHAINS,
 } from './mock-data';
 import { enclave } from './crypto-enclave';
@@ -87,6 +91,18 @@ interface SkelvreContextType {
   guardrails: SecurityGuardrails;
   updateGuardrails: (newGuardrails: Partial<SecurityGuardrails>) => Promise<void>;
 
+  // Roadmaps Management & Project Pillars
+  roadmaps: ProjectRoadmapItem[];
+  addRoadmapItem: (item: Omit<ProjectRoadmapItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ProjectRoadmapItem>;
+  updateRoadmapStatus: (id: string, status: RoadmapStatus, progressPercent?: number) => Promise<void>;
+
+  // Advanced Roadmap Execution Handlers
+  executeBatchSubscriptions: () => Promise<{ processedCount: number; totalAmountUsd: number }>;
+  exportEnclaveBackup: () => Promise<string>;
+  importEnclaveBackup: (jsonStr: string) => Promise<boolean>;
+  exportLedgerAudit: (format: 'csv' | 'json') => void;
+  triggerEmergencyKillswitch: () => Promise<void>;
+
   // Enclave Security
   isEnclaveLocked: boolean;
   lockEnclave: () => void;
@@ -146,6 +162,7 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
   const [activeChatId, setActiveChatId] = useState<string>('');
   const [ledger, setLedger] = useState<SettlementLedgerEntry[]>([]);
   const [guardrails, setGuardrails] = useState<SecurityGuardrails>(INITIAL_GUARDRAILS);
+  const [roadmaps, setRoadmaps] = useState<ProjectRoadmapItem[]>(INITIAL_ROADMAPS);
   const [isEnclaveLocked, setIsEnclaveLocked] = useState<boolean>(false);
 
   // Connectivity & Sync state
@@ -179,6 +196,7 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
           savedChats,
           savedLedger,
           savedGuardrails,
+          savedRoadmaps,
           pendingSync,
         ] = await Promise.all([
           db.users.toArray(),
@@ -189,6 +207,7 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
           db.chatSessions.toArray(),
           db.ledger.reverse().toArray(),
           db.guardrails.get('default'),
+          db.roadmaps.toArray(),
           db.syncQueue.where('status').equals('pending').count(),
         ]);
 
@@ -228,6 +247,10 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
 
         if (savedGuardrails) {
           setGuardrails(savedGuardrails);
+        }
+
+        if (savedRoadmaps.length > 0) {
+          setRoadmaps(savedRoadmaps);
         }
 
         setPendingSyncCount(pendingSync);
@@ -964,6 +987,176 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     setGuardrails(updated);
   };
 
+  // Roadmap Management
+  const addRoadmapItem = async (data: Omit<ProjectRoadmapItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<ProjectRoadmapItem> => {
+    const newItem: ProjectRoadmapItem = {
+      ...data,
+      id: `rdm_${Date.now().toString(36)}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.roadmaps.put(newItem);
+    await db.queueSync('roadmaps', 'insert', newItem.id, newItem);
+
+    const updated = [newItem, ...roadmaps];
+    setRoadmaps(updated);
+    setPendingSyncCount((prev) => prev + 1);
+    return newItem;
+  };
+
+  const updateRoadmapStatus = async (id: string, status: RoadmapStatus, progressPercent?: number) => {
+    const target = roadmaps.find((r) => r.id === id);
+    if (!target) return;
+
+    const newPercent = progressPercent !== undefined ? progressPercent : (status === 'completed' ? 100 : (status === 'in_progress' ? 50 : 0));
+    const updatedItem: ProjectRoadmapItem = {
+      ...target,
+      status,
+      progressPercent: newPercent,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.roadmaps.put(updatedItem);
+    await db.queueSync('roadmaps', 'update', id, { status, progressPercent: newPercent });
+
+    const updated = roadmaps.map((r) => (r.id === id ? updatedItem : r));
+    setRoadmaps(updated);
+    setPendingSyncCount((prev) => prev + 1);
+  };
+
+  // Batch Subscriptions Execution
+  const executeBatchSubscriptions = async (): Promise<{ processedCount: number; totalAmountUsd: number }> => {
+    const activeGrantsList = grants.filter((g) => g.status === 'active');
+    let processedCount = 0;
+    let totalAmountUsd = 0;
+
+    for (const grant of activeGrantsList) {
+      await simulateSubscriptionPull(grant.id);
+      processedCount++;
+      totalAmountUsd += parseFloat(grant.maxAmountPerInterval) || 0;
+    }
+
+    return { processedCount, totalAmountUsd };
+  };
+
+  // Enclave Encrypted Backup & Import
+  const exportEnclaveBackup = async (): Promise<string> => {
+    const backupState = {
+      version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      wallets,
+      grants,
+      agentSessions,
+      guardrails,
+      roadmaps,
+    };
+    return JSON.stringify(backupState, null, 2);
+  };
+
+  const importEnclaveBackup = async (jsonStr: string): Promise<boolean> => {
+    try {
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.wallets && Array.isArray(parsed.wallets)) {
+        await db.wallets.bulkPut(parsed.wallets);
+        setWallets(parsed.wallets);
+        if (parsed.wallets.length > 0) setActiveWalletId(parsed.wallets[0].id);
+      }
+      if (parsed.grants && Array.isArray(parsed.grants)) {
+        await db.grants.bulkPut(parsed.grants);
+        setGrants(parsed.grants);
+      }
+      if (parsed.agentSessions && Array.isArray(parsed.agentSessions)) {
+        await db.agentSessions.bulkPut(parsed.agentSessions);
+        setAgentSessions(parsed.agentSessions);
+      }
+      if (parsed.roadmaps && Array.isArray(parsed.roadmaps)) {
+        await db.roadmaps.bulkPut(parsed.roadmaps);
+        setRoadmaps(parsed.roadmaps);
+      }
+      if (parsed.guardrails) {
+        await db.guardrails.put({ id: 'default', ...parsed.guardrails });
+        setGuardrails(parsed.guardrails);
+      }
+      return true;
+    } catch (e) {
+      console.warn('Backup import error:', e);
+      return false;
+    }
+  };
+
+  // Ledger Audit Exporter
+  const exportLedgerAudit = (format: 'csv' | 'json') => {
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(ledger, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `skelvre-settlement-ledger-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const headers = ['Timestamp', 'ID', 'Merchant', 'Wallet', 'Chain', 'Amount', 'Asset', 'Status', 'TxHash'];
+      const rows = ledger.map((l) => [
+        l.createdAt,
+        l.id,
+        `"${l.merchantName}"`,
+        l.walletAddress,
+        l.chainCaip,
+        l.amount,
+        l.assetSymbol,
+        l.status,
+        l.txHash || 'None',
+      ]);
+      const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `skelvre-settlement-ledger-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  // Emergency Enclave Killswitch
+  const triggerEmergencyKillswitch = async () => {
+    // 1. Lock enclave in memory
+    enclave.lock();
+    setIsEnclaveLocked(true);
+
+    // 2. Revoke all subscription grants
+    const revokedGrants = grants.map((g) => ({ ...g, status: 'revoked' as const }));
+    await db.grants.bulkPut(revokedGrants);
+    setGrants(revokedGrants);
+
+    // 3. Clear active agent sessions
+    await db.agentSessions.clear();
+    setAgentSessions([]);
+
+    // 4. Record critical killswitch ledger entry
+    const killswitchLedger: SettlementLedgerEntry = {
+      id: `led_kill_${Date.now()}`,
+      merchantId: 'security_enclave',
+      merchantName: 'Emergency Killswitch Protocol',
+      walletId: activeWallet?.id || 'wal_enclave',
+      walletAddress: activeWallet?.address || '0x0',
+      chainCaip: activeWallet?.chainCaip || 'eip155:8453',
+      amount: '0.00',
+      assetSymbol: 'USD',
+      assetAddress: '0x0',
+      amountUsd: 0,
+      status: 'blocked_by_guardrail',
+      metadata: {
+        reason: 'CRITICAL: Emergency Enclave Killswitch triggered by client operator. All grants revoked and key memory locked.',
+      },
+      createdAt: new Date().toISOString(),
+    };
+
+    await db.ledger.put(killswitchLedger);
+    setLedger((prev) => [killswitchLedger, ...prev]);
+  };
+
   // Optional Edge Sync (Turso / libSQL)
   const syncWithEdge = async () => {
     if (!isOnline) {
@@ -1049,6 +1242,14 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
         ledger,
         guardrails,
         updateGuardrails,
+        roadmaps,
+        addRoadmapItem,
+        updateRoadmapStatus,
+        executeBatchSubscriptions,
+        exportEnclaveBackup,
+        importEnclaveBackup,
+        exportLedgerAudit,
+        triggerEmergencyKillswitch,
         isEnclaveLocked,
         lockEnclave,
         unlockEnclave,

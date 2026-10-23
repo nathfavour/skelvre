@@ -19,6 +19,8 @@ import {
   Trash2,
   Wifi,
   WifiOff,
+  Flame,
+  Download,
 } from 'lucide-react';
 
 export function SettingsView() {
@@ -37,7 +39,12 @@ export function SettingsView() {
     syncStatus,
     syncWithEdge,
     resetLocalDatabase,
+    triggerEmergencyKillswitch,
+    exportLedgerAudit,
   } = useSkelvre();
+
+  const [killswitchConfirm, setKillswitchConfirm] = useState(false);
+  const [killswitchNotice, setKillswitchNotice] = useState(false);
 
   const [maxTx, setMaxTx] = useState(guardrails.maxSingleTxUsd.toString());
   const [dailyCap, setDailyCap] = useState(guardrails.maxDailyTxUsd.toString());
@@ -244,6 +251,74 @@ export function SettingsView() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Emergency Enclave Killswitch & Audit Export Bar */}
+      <div className="p-6 rounded-xl bg-black border border-rose-500/30 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-rose-950/60 border border-rose-500/40 text-rose-400">
+              <Flame className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-white flex items-center gap-2">
+                <span>Emergency Enclave Killswitch Protocol</span>
+                <span className="text-[10px] font-mono text-rose-400 bg-rose-950/60 px-2 py-0.5 rounded border border-rose-500/30">
+                  Critical Response
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-0.5 font-mono">
+                Instantly freeze memory key derivation, revoke all active subscriptions, and clear active agent tokens.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 font-mono text-xs">
+            <button
+              onClick={() => exportLedgerAudit('csv')}
+              className="px-3 py-2 bg-black border border-white/15 rounded-lg text-zinc-300 hover:text-white hover:border-violet-500/50 transition-colors flex items-center gap-1.5"
+            >
+              <Download className="w-3.5 h-3.5 text-violet-400" />
+              <span>Export Audit CSV</span>
+            </button>
+
+            {!killswitchConfirm ? (
+              <button
+                onClick={() => setKillswitchConfirm(true)}
+                className="px-3.5 py-2 bg-rose-600 text-white font-bold rounded-lg hover:bg-rose-500 transition-colors shadow-md shadow-rose-600/30 flex items-center gap-1.5"
+              >
+                <Flame className="w-3.5 h-3.5" />
+                <span>Trigger Killswitch</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-rose-300 text-xs">Confirm Lockdown?</span>
+                <button
+                  onClick={async () => {
+                    await triggerEmergencyKillswitch();
+                    setKillswitchConfirm(false);
+                    setKillswitchNotice(true);
+                  }}
+                  className="px-3 py-1.5 bg-rose-700 font-bold text-white rounded hover:bg-rose-600 animate-pulse"
+                >
+                  Yes, Freeze Enclave Now
+                </button>
+                <button
+                  onClick={() => setKillswitchConfirm(false)}
+                  className="px-2 py-1 text-zinc-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {killswitchNotice && (
+          <div className="p-3 rounded-lg bg-rose-950/80 border border-rose-500/50 text-rose-200 text-xs font-mono">
+            KILLSWITCH EXECUTED: All enclave key memory locked, active subscriptions revoked, agent tokens cleared, and security event recorded in local ledger.
+          </div>
+        )}
       </div>
 
       {/* Security Enclave Configuration */}

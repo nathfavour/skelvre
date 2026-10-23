@@ -36,6 +36,32 @@ export function DevelopersView() {
   const [sandboxResponse, setSandboxResponse] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'typescript' | 'python' | 'curl' | 'mcp'>('typescript');
 
+  // Webhook Simulator State
+  const [webhookEvent, setWebhookEvent] = useState<'subscription.pushed' | 'x402.settled' | 'grant.revoked'>('x402.settled');
+  const [webhookLog, setWebhookLog] = useState<{ timestamp: string; payload: any; signature: string; verified: boolean } | null>(null);
+
+  const handleTestWebhookDispatch = () => {
+    const timestamp = new Date().toISOString();
+    const mockPayload = {
+      event: webhookEvent,
+      merchantId: merchants[0]?.id || 'mer_deepseek_node',
+      timestamp,
+      data: {
+        settlementId: `led_wh_${Date.now()}`,
+        amount: '0.25',
+        assetSymbol: 'USDC',
+        chainCaip: activeWallet?.chainCaip || 'eip155:8453',
+      },
+    };
+    const signature = 'sha256_hmac_' + Array.from({ length: 32 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
+    setWebhookLog({
+      timestamp,
+      payload: mockPayload,
+      signature,
+      verified: true,
+    });
+  };
+
   // Trigger x402 simulation
   const runX402Challenge = async () => {
     setSandboxStep('402_challenged');
@@ -167,6 +193,68 @@ curl -i https://skelvre.network/api/x402 \\
         <p className="text-xs text-zinc-400 mt-1 max-w-xl">
           Register third-party APIs for automated pull grants, inspect real-time HTTP 402 payment handshakes, and embed zero-custody crypto subscriptions into any client.
         </p>
+      </div>
+
+      {/* Webhook Event Simulator & HMAC Signature Verifier */}
+      <div className="p-6 rounded-xl bg-black border border-white/15 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <h2 className="text-sm font-semibold text-white">
+                Merchant Webhook Dispatch & HMAC Signature Testbed
+              </h2>
+            </div>
+            <p className="text-xs text-zinc-400 font-mono mt-0.5">
+              Simulate webhook payloads sent to merchant endpoints with X-Skelvre-Signature headers
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 font-mono text-xs">
+            <select
+              value={webhookEvent}
+              onChange={(e) => setWebhookEvent(e.target.value as any)}
+              className="px-3 py-1.5 bg-zinc-950 border border-white/15 rounded text-white text-xs"
+            >
+              <option value="x402.settled">x402.settled</option>
+              <option value="subscription.pushed">subscription.pushed</option>
+              <option value="grant.revoked">grant.revoked</option>
+            </select>
+
+            <button
+              onClick={handleTestWebhookDispatch}
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-500 transition-colors shadow-sm flex items-center gap-1.5"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>Dispatch Webhook Event</span>
+            </button>
+          </div>
+        </div>
+
+        {webhookLog ? (
+          <div className="p-4 rounded-lg bg-zinc-950 border border-emerald-500/30 font-mono text-xs space-y-2">
+            <div className="flex items-center justify-between pb-2 border-b border-white/5">
+              <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>HMAC-SHA256 Signature Verified</span>
+              </span>
+              <span className="text-zinc-500">{webhookLog.timestamp}</span>
+            </div>
+
+            <div>
+              <span className="text-zinc-500">Header X-Skelvre-Signature: </span>
+              <span className="text-violet-300">{webhookLog.signature}</span>
+            </div>
+
+            <pre className="text-zinc-300 text-[11px] pt-1">
+              {JSON.stringify(webhookLog.payload, null, 2)}
+            </pre>
+          </div>
+        ) : (
+          <div className="p-4 rounded-lg bg-zinc-950 border border-white/5 font-mono text-xs text-zinc-500 text-center">
+            Select event type and click &ldquo;Dispatch Webhook Event&rdquo; to test HMAC signature verification
+          </div>
+        )}
       </div>
 
       {/* x402 Live Interactive Sandbox */}

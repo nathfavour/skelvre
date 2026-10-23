@@ -15,6 +15,10 @@ import {
   AlertCircle,
   Copy,
   ChevronRight,
+  Layers,
+  Zap,
+  Sliders,
+  Sparkles,
 } from 'lucide-react';
 
 export function SubscriptionsView() {
@@ -24,11 +28,32 @@ export function SubscriptionsView() {
     openRightSidebar,
     revokeSubscriptionGrant,
     simulateSubscriptionPull,
+    executeBatchSubscriptions,
   } = useSkelvre();
 
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'revoked'>('all');
   const [copiedProofId, setCopiedProofId] = useState<string | null>(null);
   const [isPullingId, setIsPullingId] = useState<string | null>(null);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
+  const [batchResult, setBatchResult] = useState<{ processedCount: number; totalAmountUsd: number } | null>(null);
+
+  // Dynamic Scaling Calculator State
+  const [showCalculator, setShowCalculator] = useState(false);
+  const [calcBaseAmount, setCalcBaseAmount] = useState('50.00');
+  const [calcUsageMultiplier, setCalcUsageMultiplier] = useState('1.5');
+  const [calcGraceHours, setCalcGraceHours] = useState('24');
+
+  const handleRunBatchPulls = async () => {
+    setIsBatchProcessing(true);
+    setBatchResult(null);
+    try {
+      const res = await executeBatchSubscriptions();
+      setBatchResult(res);
+      setTimeout(() => setBatchResult(null), 4000);
+    } finally {
+      setIsBatchProcessing(false);
+    }
+  };
 
   const copyProof = (proof: string, id: string) => {
     navigator.clipboard.writeText(proof);
@@ -71,6 +96,15 @@ export function SubscriptionsView() {
           </div>
 
           <button
+            onClick={handleRunBatchPulls}
+            disabled={isBatchProcessing || grants.filter(g => g.status === 'active').length === 0}
+            className="px-3.5 py-2.5 text-xs font-mono font-medium text-violet-300 bg-violet-950/60 border border-violet-500/40 rounded-lg hover:bg-violet-900/50 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <Zap className={`w-3.5 h-3.5 ${isBatchProcessing ? 'animate-spin' : ''}`} />
+            <span>{isBatchProcessing ? 'Executing Batch...' : 'Batch Pull Runner'}</span>
+          </button>
+
+          <button
             onClick={() => openRightSidebar('create_grant', null, 'Authorize Recurring Pull Subscription')}
             className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2"
           >
@@ -78,6 +112,93 @@ export function SubscriptionsView() {
             <span>Create Subscription Grant</span>
           </button>
         </div>
+      </div>
+
+      {batchResult && (
+        <div className="p-4 rounded-xl bg-black border border-emerald-500/40 font-mono text-xs text-emerald-400 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            <span>
+              Batch Execution Complete! Processed {batchResult.processedCount} recurring pull grants (${batchResult.totalAmountUsd.toFixed(2)} total settled).
+            </span>
+          </div>
+          <span className="text-zinc-400 text-[11px]">Enclave Signed</span>
+        </div>
+      )}
+
+      {/* Dynamic Scaling Cap & Grace Period Calculator Box */}
+      <div className="p-5 rounded-xl bg-black border border-white/15 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Sliders className="w-4 h-4 text-violet-400" />
+            <div>
+              <h2 className="text-sm font-semibold text-white">Dynamic Allowance & Grace Period Calculator</h2>
+              <p className="text-xs text-zinc-400 font-mono mt-0.5">
+                Simulate usage-based subscription scaling caps and retry scheduling bounds
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowCalculator(!showCalculator)}
+            className="text-xs font-mono text-violet-400 hover:text-violet-300 flex items-center gap-1"
+          >
+            <span>{showCalculator ? 'Hide Calculator' : 'Open Calculator'}</span>
+            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${showCalculator ? 'rotate-90' : ''}`} />
+          </button>
+        </div>
+
+        {showCalculator && (
+          <div className="p-4 rounded-lg bg-zinc-950 border border-white/10 space-y-4 text-xs font-mono">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-zinc-400">Base Plan Cap (USD)</label>
+                <input
+                  type="number"
+                  value={calcBaseAmount}
+                  onChange={(e) => setCalcBaseAmount(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-black border border-white/15 rounded text-white font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-zinc-400">Usage Peak Multiplier</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={calcUsageMultiplier}
+                  onChange={(e) => setCalcUsageMultiplier(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-black border border-white/15 rounded text-white font-mono text-xs"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-zinc-400">Grace Retry Window (Hours)</label>
+                <input
+                  type="number"
+                  value={calcGraceHours}
+                  onChange={(e) => setCalcGraceHours(e.target.value)}
+                  className="w-full px-3 py-1.5 bg-black border border-white/15 rounded text-white font-mono text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="p-3 rounded bg-black border border-white/5 space-y-2">
+              <div className="flex justify-between items-center text-zinc-300">
+                <span>Calculated Dynamic Ceiling Cap:</span>
+                <span className="text-violet-300 font-bold text-sm">
+                  ${((parseFloat(calcBaseAmount) || 0) * (parseFloat(calcUsageMultiplier) || 1)).toFixed(2)} USDC
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-zinc-400 text-[11px]">
+                <span>Automated Retry Schedule:</span>
+                <span className="text-emerald-400">
+                  Every 4 hrs during {calcGraceHours}h grace period
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter Tabs */}

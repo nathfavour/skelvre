@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useSkelvre } from '@/lib/store';
 import { SUPPORTED_CHAINS } from '@/lib/mock-data';
-import { ChainCAIP, Wallet, SubscriptionGrant, AgentSession, SettlementLedgerEntry } from '@/lib/types';
+import { ChainCAIP, Wallet, SubscriptionGrant, AgentSession, SettlementLedgerEntry, ProjectCategory, RoadmapPriority, RoadmapStatus } from '@/lib/types';
 import {
   X,
   ShieldAlert,
@@ -37,6 +37,7 @@ export function RightSidebar() {
     createAgentSession,
     guardrails,
     updateGuardrails,
+    addRoadmapItem,
   } = useSkelvre();
 
   // Add wallet state
@@ -61,6 +62,15 @@ export function RightSidebar() {
   const [localMaxTx, setLocalMaxTx] = useState(guardrails.maxSingleTxUsd.toString());
   const [localDailyCap, setLocalDailyCap] = useState(guardrails.maxDailyTxUsd.toString());
   const [localAutoLock, setLocalAutoLock] = useState(guardrails.autoLockMinutes.toString());
+
+  // Create Roadmap Item state
+  const [rdmProject, setRdmProject] = useState<ProjectCategory>('wallets');
+  const [rdmTitle, setRdmTitle] = useState('');
+  const [rdmDesc, setRdmDesc] = useState('');
+  const [rdmQuarter, setRdmQuarter] = useState('Q1 2025');
+  const [rdmPriority, setRdmPriority] = useState<RoadmapPriority>('high');
+  const [rdmActionPath, setRdmActionPath] = useState('/wallets');
+  const [rdmActionLabel, setRdmActionLabel] = useState('Open Feature');
 
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [signingPending, setSigningPending] = useState(false);
@@ -674,6 +684,126 @@ export function RightSidebar() {
               className="w-full py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
             >
               Save Guardrail Rules
+            </button>
+          </form>
+        )}
+
+        {/* VIEW 9: CREATE ROADMAP ITEM */}
+        {rightSidebar.type === 'create_roadmap_item' && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const projectNames: Record<ProjectCategory, string> = {
+                wallets: 'Universal Enclave Wallets',
+                subscriptions: 'Recurring Pull Engine',
+                agents: 'MCP Agent Gateway',
+                developers: 'x402 Developer Platform',
+                offline_sync: 'Offline Storage & Edge Sync',
+                security: 'Security Guardrails',
+              };
+              await addRoadmapItem({
+                projectId: rdmProject,
+                projectName: projectNames[rdmProject],
+                title: rdmTitle,
+                description: rdmDesc,
+                status: 'in_progress',
+                priority: rdmPriority,
+                quarter: rdmQuarter,
+                progressPercent: 50,
+                targetCapabilities: [rdmTitle, 'Milestone delivery', 'Verification tests'],
+                actionPath: rdmActionPath,
+                actionLabel: rdmActionLabel,
+              });
+              setRdmTitle('');
+              setRdmDesc('');
+              closeRightSidebar();
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-zinc-300">Project Domain</label>
+              <select
+                value={rdmProject}
+                onChange={(e) => {
+                  const p = e.target.value as ProjectCategory;
+                  setRdmProject(p);
+                  const paths: Record<ProjectCategory, string> = {
+                    wallets: '/wallets',
+                    subscriptions: '/subscriptions',
+                    agents: '/agents',
+                    developers: '/developers',
+                    offline_sync: '/settings',
+                    security: '/settings',
+                  };
+                  setRdmActionPath(paths[p]);
+                }}
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500 font-mono"
+              >
+                <option value="wallets">Universal Enclave Wallets</option>
+                <option value="subscriptions">Recurring Pull Engine</option>
+                <option value="agents">MCP Agent Gateway</option>
+                <option value="developers">x402 Developer Platform</option>
+                <option value="offline_sync">Offline Storage & Edge Sync</option>
+                <option value="security">Security Guardrails</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-zinc-300">Milestone Title</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Cross-Chain Hardware Enclave Relay"
+                value={rdmTitle}
+                onChange={(e) => setRdmTitle(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500 font-mono"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-zinc-300">Description & Specification</label>
+              <textarea
+                required
+                rows={3}
+                placeholder="Describe key architectural deliverables and capabilities..."
+                value={rdmDesc}
+                onChange={(e) => setRdmDesc(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500 font-mono"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-zinc-300">Target Quarter</label>
+                <input
+                  type="text"
+                  required
+                  value={rdmQuarter}
+                  onChange={(e) => setRdmQuarter(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500 font-mono"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-zinc-300">Priority Level</label>
+                <select
+                  value={rdmPriority}
+                  onChange={(e) => setRdmPriority(e.target.value as RoadmapPriority)}
+                  className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500 font-mono"
+                >
+                  <option value="critical">Critical</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30"
+            >
+              Add Project Roadmap Milestone
             </button>
           </form>
         )}
