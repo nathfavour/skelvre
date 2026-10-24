@@ -2,14 +2,16 @@
 
 import React, { useState } from 'react';
 import { useSkelvre } from '@/lib/store';
+import Link from 'next/link';
 import { SUPPORTED_CHAINS } from '@/lib/mock-data';
-import { ChainCAIP, Wallet, SubscriptionGrant, AgentSession, SettlementLedgerEntry, ProjectCategory, RoadmapPriority, RoadmapStatus } from '@/lib/types';
+import { ChainCAIP, Wallet, SubscriptionGrant, AgentSession, SettlementLedgerEntry, ProjectCategory, RoadmapPriority, RoadmapStatus, ProjectRoadmapItem } from '@/lib/types';
 import {
   X,
   ShieldAlert,
   Key,
   ShieldCheck,
   CheckCircle2,
+  Circle,
   Copy,
   ExternalLink,
   Flame,
@@ -18,6 +20,15 @@ import {
   Trash2,
   Lock,
   ArrowRight,
+  ArrowUpRight,
+  Layers,
+  Map,
+  Wallet as WalletIcon,
+  Repeat,
+  Bot,
+  Terminal,
+  HardDrive,
+  Shield,
 } from 'lucide-react';
 
 export function RightSidebar() {
@@ -38,6 +49,9 @@ export function RightSidebar() {
     guardrails,
     updateGuardrails,
     addRoadmapItem,
+    updateRoadmapStatus,
+    toggleRoadmapCapability,
+    deleteRoadmapItem,
   } = useSkelvre();
 
   // Add wallet state
@@ -69,6 +83,7 @@ export function RightSidebar() {
   const [rdmDesc, setRdmDesc] = useState('');
   const [rdmQuarter, setRdmQuarter] = useState('Q1 2025');
   const [rdmPriority, setRdmPriority] = useState<RoadmapPriority>('high');
+  const [rdmCapabilitiesInput, setRdmCapabilitiesInput] = useState('Architecture specification, Verification tests, Production rollout');
   const [rdmActionPath, setRdmActionPath] = useState('/wallets');
   const [rdmActionLabel, setRdmActionLabel] = useState('Open Feature');
 
@@ -701,6 +716,11 @@ export function RightSidebar() {
                 offline_sync: 'Offline Storage & Edge Sync',
                 security: 'Security Guardrails',
               };
+              const parsedCapabilities = rdmCapabilitiesInput
+                .split(',')
+                .map((s) => s.trim())
+                .filter((s) => s.length > 0);
+
               await addRoadmapItem({
                 projectId: rdmProject,
                 projectName: projectNames[rdmProject],
@@ -709,8 +729,9 @@ export function RightSidebar() {
                 status: 'in_progress',
                 priority: rdmPriority,
                 quarter: rdmQuarter,
-                progressPercent: 50,
-                targetCapabilities: [rdmTitle, 'Milestone delivery', 'Verification tests'],
+                progressPercent: 0,
+                targetCapabilities: parsedCapabilities.length > 0 ? parsedCapabilities : [rdmTitle, 'Milestone delivery', 'Verification tests'],
+                completedCapabilities: [],
                 actionPath: rdmActionPath,
                 actionLabel: rdmActionLabel,
               });
@@ -772,6 +793,17 @@ export function RightSidebar() {
               />
             </div>
 
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-zinc-300">Target Capabilities (Comma Separated)</label>
+              <textarea
+                rows={2}
+                placeholder="e.g. EIP-712 verifier, Nonce lock, Unit tests"
+                value={rdmCapabilitiesInput}
+                onChange={(e) => setRdmCapabilitiesInput(e.target.value)}
+                className="w-full px-3 py-2 text-xs bg-black border border-white/15 rounded-lg text-white focus:outline-none focus:border-violet-500 font-mono"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <label className="text-xs font-medium text-zinc-300">Target Quarter</label>
@@ -806,6 +838,159 @@ export function RightSidebar() {
               Add Project Roadmap Milestone
             </button>
           </form>
+        )}
+
+        {/* VIEW 10: ROADMAP DETAILS INSPECTOR */}
+        {rightSidebar.type === 'roadmap_details' && (
+          <div className="space-y-4">
+            {(() => {
+              const item = rightSidebar.data as ProjectRoadmapItem;
+              if (!item) return null;
+
+              const categoryMeta: Record<ProjectCategory, { name: string; icon: React.ElementType; color: string }> = {
+                wallets: { name: 'Universal Enclave Wallets', icon: WalletIcon, color: 'text-violet-400 bg-violet-950/60 border-violet-500/40' },
+                subscriptions: { name: 'Recurring Pull Engine', icon: Repeat, color: 'text-emerald-400 bg-emerald-950/60 border-emerald-500/40' },
+                agents: { name: 'MCP Agent Gateway', icon: Bot, color: 'text-sky-400 bg-sky-950/60 border-sky-500/40' },
+                developers: { name: 'x402 Developer Platform', icon: Terminal, color: 'text-amber-400 bg-amber-950/60 border-amber-500/40' },
+                offline_sync: { name: 'Offline Storage & Edge Sync', icon: HardDrive, color: 'text-fuchsia-400 bg-fuchsia-950/60 border-fuchsia-500/40' },
+                security: { name: 'Security Guardrails', icon: Shield, color: 'text-rose-400 bg-rose-950/60 border-rose-500/40' },
+              };
+              const meta = categoryMeta[item.projectId] || { name: item.projectName, icon: Layers, color: 'text-violet-400' };
+              const Icon = meta.icon;
+              const completedList = item.completedCapabilities || [];
+
+              return (
+                <>
+                  <div className="p-4 rounded-xl bg-black border border-white/15 space-y-3">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className={`px-2 py-0.5 rounded border text-[10px] uppercase font-medium flex items-center gap-1.5 ${meta.color}`}>
+                        <Icon className="w-3 h-3" />
+                        <span>{meta.name}</span>
+                      </span>
+                      <span className="text-amber-400 text-[11px] font-mono uppercase font-semibold">
+                        {item.priority} · {item.quarter}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white leading-snug">
+                      {item.title}
+                    </h3>
+
+                    <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Execution Progress & Status Buttons */}
+                  <div className="p-4 rounded-xl bg-black border border-white/15 space-y-3 font-mono text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-zinc-400">Milestone Execution Gauge</span>
+                      <span className="text-white font-bold">{item.progressPercent}%</span>
+                    </div>
+
+                    <div className="w-full h-2 rounded-full bg-zinc-900 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          item.status === 'completed' ? 'bg-emerald-500' : 'bg-violet-500'
+                        }`}
+                        style={{ width: `${item.progressPercent}%` }}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                      <span className="text-zinc-400">Status State</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => updateRoadmapStatus(item.id, 'backlog')}
+                          className={`px-2 py-1 rounded text-[11px] transition-colors ${
+                            item.status === 'backlog' ? 'bg-zinc-800 text-white font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Backlog
+                        </button>
+                        <button
+                          onClick={() => updateRoadmapStatus(item.id, 'in_progress')}
+                          className={`px-2 py-1 rounded text-[11px] transition-colors ${
+                            item.status === 'in_progress' ? 'bg-violet-600 text-white font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          In Progress
+                        </button>
+                        <button
+                          onClick={() => updateRoadmapStatus(item.id, 'completed')}
+                          className={`px-2 py-1 rounded text-[11px] transition-colors ${
+                            item.status === 'completed' ? 'bg-emerald-600 text-white font-bold' : 'text-zinc-500 hover:text-zinc-300'
+                          }`}
+                        >
+                          Complete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Interactive Target Capabilities Checklist */}
+                  <div className="p-4 rounded-xl bg-zinc-950 border border-white/10 space-y-3 font-mono text-xs">
+                    <div className="flex items-center justify-between text-[11px] text-zinc-400 uppercase tracking-wider">
+                      <span>Target Capabilities Checklist</span>
+                      <span>({completedList.length}/{item.targetCapabilities.length})</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {item.targetCapabilities.map((cap) => {
+                        const isDone = completedList.includes(cap) || item.status === 'completed';
+                        return (
+                          <button
+                            key={cap}
+                            type="button"
+                            onClick={() => toggleRoadmapCapability(item.id, cap)}
+                            className="w-full text-left p-2.5 rounded-lg bg-black border border-white/10 hover:border-violet-500/50 transition-colors flex items-center justify-between gap-2"
+                          >
+                            <div className="flex items-center gap-2 text-xs">
+                              {isDone ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                              ) : (
+                                <Circle className="w-4 h-4 text-zinc-600 shrink-0" />
+                              )}
+                              <span className={isDone ? 'text-zinc-300 line-through opacity-80' : 'text-white'}>
+                                {cap}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-violet-400 shrink-0">Toggle</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Actions & Deletion */}
+                  <div className="pt-2 space-y-3 font-mono text-xs">
+                    {item.actionPath && (
+                      <Link
+                        href={item.actionPath}
+                        onClick={closeRightSidebar}
+                        className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center justify-center gap-2"
+                      >
+                        <span>{item.actionLabel || 'Test Feature in Platform'}</span>
+                        <ArrowUpRight className="w-4 h-4" />
+                      </Link>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await deleteRoadmapItem(item.id);
+                        closeRightSidebar();
+                      }}
+                      className="w-full py-2 px-4 text-xs text-rose-400 bg-rose-950/40 border border-rose-500/30 rounded-lg hover:bg-rose-950/70 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remove Roadmap Milestone</span>
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
         )}
 
         {/* VIEW 8: SETTLEMENT LEDGER AUDIT */}

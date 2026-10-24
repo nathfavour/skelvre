@@ -95,6 +95,10 @@ interface SkelvreContextType {
   roadmaps: ProjectRoadmapItem[];
   addRoadmapItem: (item: Omit<ProjectRoadmapItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ProjectRoadmapItem>;
   updateRoadmapStatus: (id: string, status: RoadmapStatus, progressPercent?: number) => Promise<void>;
+  toggleRoadmapCapability: (id: string, capability: string) => Promise<void>;
+  deleteRoadmapItem: (id: string) => Promise<void>;
+  executeBatchRoadmapMilestones: () => Promise<{ updatedCount: number }>;
+  exportRoadmapSpecs: (format: 'json' | 'csv') => void;
 
   // Advanced Roadmap Execution Handlers
   executeBatchSubscriptions: () => Promise<{ processedCount: number; totalAmountUsd: number }>;
@@ -1025,6 +1029,106 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
     setPendingSyncCount((prev) => prev + 1);
   };
 
+  const toggleRoadmapCapability = async (id: string, capability: string) => {
+    const target = roadmaps.find((r) => r.id === id);
+    if (!target) return;
+
+    const currentCompleted = target.completedCapabilities || [];
+    let updatedCompleted: string[];
+    if (currentCompleted.includes(capability)) {
+      updatedCompleted = currentCompleted.filter((c) => c !== capability);
+    } else {
+      updatedCompleted = [...currentCompleted, capability];
+    }
+
+    const totalTarget = target.targetCapabilities.length;
+    const newPercent = totalTarget > 0 ? Math.round((updatedCompleted.length / totalTarget) * 100) : target.progressPercent;
+    const newStatus: RoadmapStatus = newPercent === 100 ? 'completed' : (newPercent > 0 ? 'in_progress' : 'backlog');
+
+    const updatedItem: ProjectRoadmapItem = {
+      ...target,
+      completedCapabilities: updatedCompleted,
+      progressPercent: newPercent,
+      status: newStatus,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await db.roadmaps.put(updatedItem);
+    await db.queueSync('roadmaps', 'update', id, updatedItem);
+
+    const updated = roadmaps.map((r) => (r.id === id ? updatedItem : r));
+    setRoadmaps(updated);
+    setPendingSyncCount((prev) => prev + 1);
+  };
+
+  const deleteRoadmapItem = async (id: string) => {
+    await db.roadmaps.delete(id);
+    await db.queueSync('roadmaps', 'delete', id, {});
+
+    const updated = roadmaps.filter((r) => r.id !== id);
+    setRoadmaps(updated);
+    setPendingSyncCount((prev) => prev + 1);
+  };
+
+  const executeBatchRoadmapMilestones = async (): Promise<{ updatedCount: number }> => {
+    let updatedCount = 0;
+    const inProgressRoadmaps = roadmaps.filter((r) => r.status === 'in_progress');
+
+    for (const item of inProgressRoadmaps) {
+      const allCompleted = [...item.targetCapabilities];
+      const updatedItem: ProjectRoadmapItem = {
+        ...item,
+        completedCapabilities: allCompleted,
+        progressPercent: 100,
+        status: 'completed',
+        updatedAt: new Date().toISOString(),
+      };
+      await db.roadmaps.put(updatedItem);
+      await db.queueSync('roadmaps', 'update', item.id, updatedItem);
+      updatedCount++;
+    }
+
+    if (updatedCount > 0) {
+      const freshRoadmaps = await db.roadmaps.toArray();
+      setRoadmaps(freshRoadmaps);
+      setPendingSyncCount((prev) => prev + updatedCount);
+    }
+
+    return { updatedCount };
+  };
+
+  const exportRoadmapSpecs = (format: 'json' | 'csv') => {
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(roadmaps, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `skelvre-project-roadmaps-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const headers = ['ID', 'Pillar', 'Title', 'Status', 'Priority', 'Quarter', 'ProgressPercent', 'Capabilities'];
+      const rows = roadmaps.map((r) => [
+        r.id,
+        `"${r.projectName}"`,
+        `"${r.title.replace(/"/g, '""')}"`,
+        r.status,
+        r.priority,
+        r.quarter,
+        r.progressPercent,
+        `"${r.targetCapabilities.join('; ')}"`,
+      ]);
+      const csvContent = [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `skelvre-project-roadmaps-${Date.now()}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   // Batch Subscriptions Execution
   const executeBatchSubscriptions = async (): Promise<{ processedCount: number; totalAmountUsd: number }> => {
     const activeGrantsList = grants.filter((g) => g.status === 'active');
@@ -1245,6 +1349,10 @@ export function SkelvreProvider({ children }: { children: React.ReactNode }) {
         roadmaps,
         addRoadmapItem,
         updateRoadmapStatus,
+        toggleRoadmapCapability,
+        deleteRoadmapItem,
+        executeBatchRoadmapMilestones,
+        exportRoadmapSpecs,
         executeBatchSubscriptions,
         exportEnclaveBackup,
         importEnclaveBackup,

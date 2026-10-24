@@ -8,6 +8,7 @@ import {
   Map,
   Plus,
   CheckCircle2,
+  Circle,
   Clock,
   AlertCircle,
   ChevronRight,
@@ -23,14 +24,26 @@ import {
   Search,
   ArrowUpRight,
   Layers,
+  Download,
+  Play,
+  Maximize2,
 } from 'lucide-react';
 
 export function RoadmapsView() {
-  const { roadmaps, updateRoadmapStatus, openRightSidebar } = useSkelvre();
+  const {
+    roadmaps,
+    updateRoadmapStatus,
+    toggleRoadmapCapability,
+    executeBatchRoadmapMilestones,
+    exportRoadmapSpecs,
+    openRightSidebar,
+  } = useSkelvre();
 
   const [selectedCategory, setSelectedCategory] = useState<ProjectCategory | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<RoadmapStatus | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [executingBatch, setExecutingBatch] = useState(false);
+  const [batchNotice, setBatchNotice] = useState<string | null>(null);
 
   // Category Icon & Color Mapping
   const categoryMeta: Record<ProjectCategory, { name: string; icon: React.ElementType; color: string }> = {
@@ -63,7 +76,7 @@ export function RoadmapsView() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* 1. HERO HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-xl bg-black border border-white/15">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-xl bg-black border border-white/15 shadow-xl">
         <div>
           <div className="text-xs font-mono text-zinc-400 flex items-center gap-2">
             <Map className="w-4 h-4 text-violet-400" />
@@ -75,15 +88,49 @@ export function RoadmapsView() {
           <p className="text-xs text-zinc-400 mt-1 max-w-xl">
             Track architectural roadmaps across Skelvre pillars: Enclave Wallets, EIP-712 Subscriptions, MCP Agent Gateway, x402 Merchant Platform, Offline Storage, and Enclave Security.
           </p>
+          {batchNotice && (
+            <div className="mt-3 px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/40 text-xs font-mono text-emerald-300 animate-in fade-in">
+              {batchNotice}
+            </div>
+          )}
         </div>
 
-        <button
-          onClick={() => openRightSidebar('create_roadmap_item', null, 'New Project Roadmap Milestone')}
-          className="px-4 py-2.5 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-2 shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Project Milestone</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            onClick={() => exportRoadmapSpecs('json')}
+            className="px-3 py-2 text-xs font-mono font-medium text-zinc-300 bg-zinc-950 border border-white/15 rounded-lg hover:border-violet-500/50 hover:text-white transition-colors flex items-center gap-1.5"
+            title="Export full roadmap specs as JSON report"
+          >
+            <Download className="w-3.5 h-3.5 text-violet-400" />
+            <span>Export Specs</span>
+          </button>
+
+          <button
+            onClick={async () => {
+              setExecutingBatch(true);
+              try {
+                const res = await executeBatchRoadmapMilestones();
+                setBatchNotice(`Processed ${res.updatedCount} in-progress roadmap milestones!`);
+                setTimeout(() => setBatchNotice(null), 4000);
+              } finally {
+                setExecutingBatch(false);
+              }
+            }}
+            disabled={executingBatch}
+            className="px-3.5 py-2 text-xs font-mono font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 rounded-lg hover:bg-emerald-900/60 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+          >
+            <Play className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{executingBatch ? 'Running Batch...' : 'Run In-Progress Batch'}</span>
+          </button>
+
+          <button
+            onClick={() => openRightSidebar('create_roadmap_item', null, 'New Project Roadmap Milestone')}
+            className="px-4 py-2 text-xs font-semibold text-white bg-violet-600 rounded-lg hover:bg-violet-500 transition-colors shadow-md shadow-violet-600/30 flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Milestone</span>
+          </button>
+        </div>
       </div>
 
       {/* 2. OVERALL PROGRESS GAUGES */}
@@ -254,10 +301,12 @@ export function RoadmapsView() {
             };
             const Icon = meta.icon;
 
+            const completedList = item.completedCapabilities || [];
+
             return (
               <div
                 key={item.id}
-                className="p-5 rounded-xl bg-black border border-white/15 hover:border-violet-500/50 transition-all flex flex-col justify-between space-y-4"
+                className="p-5 rounded-xl bg-black border border-white/15 hover:border-violet-500/50 transition-all flex flex-col justify-between space-y-4 group"
               >
                 {/* Header */}
                 <div className="space-y-2.5">
@@ -267,12 +316,25 @@ export function RoadmapsView() {
                       <span>{meta.name}</span>
                     </span>
 
-                    <span className="text-zinc-500 text-[11px] font-mono">
-                      {item.quarter} · <span className="uppercase text-amber-400">{item.priority}</span>
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-zinc-500 text-[11px] font-mono">
+                        {item.quarter} · <span className="uppercase text-amber-400">{item.priority}</span>
+                      </span>
+
+                      <button
+                        onClick={() => openRightSidebar('roadmap_details', item, 'Roadmap Milestone Specification')}
+                        className="p-1 rounded text-zinc-500 hover:text-white hover:bg-zinc-900 transition-colors"
+                        title="Inspect Milestone in Lateral Drawer"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  <h3 className="text-base font-bold text-white leading-snug">
+                  <h3
+                    onClick={() => openRightSidebar('roadmap_details', item, 'Roadmap Milestone Specification')}
+                    className="text-base font-bold text-white leading-snug cursor-pointer group-hover:text-violet-300 transition-colors"
+                  >
                     {item.title}
                   </h3>
 
@@ -281,20 +343,34 @@ export function RoadmapsView() {
                   </p>
                 </div>
 
-                {/* Capability Checkbox List */}
+                {/* Capability Checkbox List (Interactive) */}
                 {item.targetCapabilities && item.targetCapabilities.length > 0 && (
                   <div className="p-3 rounded-lg bg-zinc-950 border border-white/5 space-y-1.5 font-mono text-[11px]">
-                    <div className="text-zinc-500 text-[10px] uppercase tracking-wider">
-                      Target Capabilities
+                    <div className="flex items-center justify-between text-zinc-500 text-[10px] uppercase tracking-wider">
+                      <span>Target Capabilities</span>
+                      <span>({completedList.length}/{item.targetCapabilities.length})</span>
                     </div>
-                    {item.targetCapabilities.map((cap, i) => (
-                      <div key={i} className="flex items-center gap-2 text-zinc-300">
-                        <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 ${
-                          item.status === 'completed' ? 'text-emerald-400' : 'text-zinc-600'
-                        }`} />
-                        <span className="truncate">{cap}</span>
-                      </div>
-                    ))}
+
+                    {item.targetCapabilities.map((cap, i) => {
+                      const isDone = completedList.includes(cap) || item.status === 'completed';
+                      return (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => toggleRoadmapCapability(item.id, cap)}
+                          className="w-full text-left flex items-center gap-2 text-zinc-300 hover:text-white transition-colors"
+                        >
+                          {isDone ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                          ) : (
+                            <Circle className="w-3.5 h-3.5 shrink-0 text-zinc-600" />
+                          )}
+                          <span className={`truncate ${isDone ? 'line-through opacity-80 text-zinc-400' : ''}`}>
+                            {cap}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
 
