@@ -199,6 +199,7 @@ export interface ProjectRoadmapItem {
   quarter: string;
   progressPercent: number;
   targetCapabilities: string[];
+  completedCapabilities?: string[];
   actionPath?: string;
   actionLabel?: string;
   createdAt: string;
@@ -237,4 +238,5 @@ export type RightSidebarType =
   | 'agent_context_inspector'
   | 'guardrail_settings'
   | 'ledger_audit'
-  | 'create_roadmap_item';
+  | 'create_roadmap_item'
+  | 'roadmap_details';
